@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>CodePen Like Editor</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: monospace;
+  display: flex;
+  height: 100vh;
+}
+
+.editor {
+  width: 50%;
+  background: #1e1e1e;
+  display: flex;
+  flex-direction: column;
+}
+
+textarea {
+  flex: 1;
+  background: #252526;
+  color: #fff;
+  border: none;
+  padding: 10px;
+  resize: none;
+  outline: none;
+  font-size: 14px;
+}
+
+label {
+  background: #333;
+  color: #fff;
+  padding: 5px;
+}
+
+iframe {
+  width: 50%;
+  border: none;
+  background: white;
+}
+</style>
+</head>
+
+<body>
+
+<div class="editor">
+  <label>HTML</label>
+  <textarea id="html">
+<h1>Hello World</h1>
+<p>هذا مثل CodePen</p>
+<button onclick="alert('يشتغل!')">اضغطني</button>
+  </textarea>
+
+  <label>CSS</label>
+  <textarea id="css">
+body {
+  font-family: Arial;
+  background: #f2f2f2;
+  text-align: center;
+}
+h1 {
+  color: blue;
+}
+  </textarea>
+
+  <label>JavaScript</label>
+  <textarea id="js">
+console.log("JavaScript شغال");
+  </textarea>
+</div>
+
+<iframe id="result"></iframe>
+
+<script>
+function run() {
+  const html = document.getElementById("html").value;
+  const css = document.getElementById("css").value;
+  const js = document.getElementById("js").value;
+
+  const output = `
+<!DOCTYPE html>
+<html>
+<head>
+<style>${css}</style>
+</head>
+<body>
+${html}
+<script>${js}<\/script>
+</body>
+</html>
+`;
+
+  document.getElementById("result").srcdoc = output;
+}
+
+document.querySelectorAll("textarea").forEach(el => {
+  el.addEventListener("input", run);
+});
+
+run(); // تشغيل أول ما تفتح الصفحة
+</script>
+
+</body>
+</html>
