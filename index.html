@@ -1,167 +1,697 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Dark Code</title>
 
 <style>
-body {
-  margin: 0;
-  font-family: monospace;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
+  :root{
+    --bg:#0b0f14; --panel:#0f1621; --panel2:#0c121b;
+    --text:#e6eefc; --muted:#9bb0d0; --border:rgba(255,255,255,.10);
+    --accent:#3b82f6; --accent2:#8b5dff;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    --sans: system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans Arabic", sans-serif;
+    --radius:14px;
+  }
 
-/* الشريط العلوي */
-.topbar {
-  height: 50px;
-  background: #111;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  padding: 0 15px;
-  border-bottom: 1px solid #333;
-}
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:
+      radial-gradient(900px 500px at 15% 10%, rgba(59,130,246,.14), transparent 60%),
+      radial-gradient(900px 500px at 85% 15%, rgba(139,93,255,.12), transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    display:flex;
+    flex-direction:column;
+  }
 
-.logo {
-  width: 32px;
-  height: 32px;
-  background: #3b82f6;
-  color: #fff;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  margin-left: 10px;
-}
+  /* Topbar */
+  .topbar{
+    height:56px;
+    background: rgba(0,0,0,.25);
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    padding:0 14px;
+    gap:12px;
+    backdrop-filter: blur(10px);
+  }
+  .logo{
+    width:34px; height:34px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color:#fff;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:800;
+    font-family:var(--sans);
+    flex:0 0 auto;
+  }
+  .site-name{font-weight:800; letter-spacing:.2px}
+  .sub{color:var(--muted); font-size:12px}
+  .spacer{flex:1}
+  .actions{display:flex; gap:8px; flex-wrap:wrap}
+  .btn{
+    border:1px solid var(--border);
+    background: rgba(255,255,255,.04);
+    color:var(--text);
+    padding:9px 10px;
+    border-radius:12px;
+    cursor:pointer;
+    font-size:12px;
+    transition:.15s ease;
+  }
+  .btn:hover{transform: translateY(-1px); background: rgba(255,255,255,.07);}
+  .btn.primary{border-color: rgba(59,130,246,.5); background: rgba(59,130,246,.18);}
+  .btn.danger{border-color: rgba(255,93,122,.35); background: rgba(255,93,122,.12);}
 
-.site-name {
-  font-size: 16px;
-  font-weight: bold;
-}
+  /* Layout */
+  .main{
+    flex:1;
+    min-height:0;
+    display:grid;
+    grid-template-columns: 1.05fr .95fr;
+    gap:12px;
+    padding:12px;
+  }
 
-/* المحتوى الرئيسي */
-.main {
-  flex: 1;
-  display: flex;
-}
+  .panel{
+    border:1px solid var(--border);
+    background: rgba(255,255,255,.03);
+    border-radius: var(--radius);
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+  }
+  .panel-head{
+    padding:10px 12px;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    background: rgba(0,0,0,.18);
+  }
+  .panel-head h2{margin:0; font-size:13px}
+  .panel-body{padding:10px; display:flex; flex-direction:column; gap:10px; min-height:0;}
 
-/* المحرر */
-.editor {
-  width: 50%;
-  background: #1e1e1e;
-  display: flex;
-  flex-direction: column;
-}
+  /* Editor + Tabs */
+  .tabs{display:flex; gap:8px; flex-wrap:wrap}
+  .tab{
+    border:1px solid var(--border);
+    background: rgba(255,255,255,.02);
+    color:var(--muted);
+    padding:7px 10px;
+    border-radius:12px;
+    cursor:pointer;
+    font-size:12px;
+    transition:.15s ease;
+  }
+  .tab.active{
+    color:var(--text);
+    border-color: rgba(59,130,246,.5);
+    background: rgba(59,130,246,.16);
+  }
 
-label {
-  background: #333;
-  color: #fff;
-  padding: 5px;
-}
+  textarea{
+    width:100%;
+    flex:1;
+    min-height:0;
+    resize:none;
+    border:1px solid var(--border);
+    border-radius: 12px;
+    padding:12px;
+    background: rgba(0,0,0,.25);
+    color:var(--text);
+    font-family: var(--mono);
+    font-size:13px;
+    line-height:1.6;
+    outline:none;
+  }
+  textarea:focus{
+    border-color: rgba(59,130,246,.55);
+    box-shadow: 0 0 0 3px rgba(59,130,246,.12);
+  }
 
-textarea {
-  flex: 1;
-  background: #252526;
-  color: #fff;
-  border: none;
-  padding: 10px;
-  resize: none;
-  outline: none;
-  font-size: 14px;
-}
+  /* Files list */
+  .files-wrap{
+    display:grid;
+    grid-template-columns: 1fr;
+    gap:8px;
+  }
+  .file-item{
+    border:1px solid var(--border);
+    background: rgba(0,0,0,.18);
+    border-radius:12px;
+    padding:10px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .file-meta{display:flex; flex-direction:column; gap:2px; min-width:0;}
+  .file-name{font-size:12px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:320px;}
+  .file-type{font-size:11px; color:var(--muted)}
+  .file-actions{display:flex; gap:8px; flex:0 0 auto;}
+  .mini{
+    padding:7px 9px;
+    border-radius:10px;
+    font-size:11px;
+  }
 
-/* النتيجة */
-iframe {
-  width: 50%;
-  border: none;
-  background: white;
-}
+  /* Preview */
+  .preview-body{padding:0; min-height:0; flex:1;}
+  iframe{
+    width:100%;
+    height:100%;
+    border:0;
+    background:white;
+  }
+
+  /* Footer/status */
+  .status{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    color:var(--muted);
+    font-size:12px;
+    padding:2px 2px 0 2px;
+    flex-wrap:wrap;
+  }
+  .sep{opacity:.5}
+
+  @media (max-width: 980px){
+    .main{grid-template-columns: 1fr;}
+  }
 </style>
 </head>
 
 <body>
-
-<!-- الشريط العلوي -->
-<div class="topbar">
-  <div class="logo">DC</div>
-  <div class="site-name">Dark Code</div>
-</div>
-
-<!-- المحتوى -->
-<div class="main">
-
-  <div class="editor">
-    <label>HTML</label>
-    <textarea id="html"></textarea>
-
-    <label>CSS</label>
-    <textarea id="css"></textarea>
-
-    <label>JavaScript</label>
-    <textarea id="js"></textarea>
+  <div class="topbar">
+    <div class="logo">DC</div>
+    <div>
+      <div class="site-name">Dark Code</div>
+      <div class="sub">محرر أكواد + معاينة مباشرة + ملفات إضافية</div>
+    </div>
+    <div class="spacer"></div>
+    <div class="actions">
+      <button class="btn primary" id="btnRun">تشغيل</button>
+      <button class="btn" id="btnImportCode">استيراد ملف للكود</button>
+      <button class="btn" id="btnAddAsset">إضافة ملف للمشروع</button>
+      <button class="btn" id="btnExportProject">تصدير مشروع</button>
+      <button class="btn" id="btnImportProject">استيراد مشروع</button>
+      <button class="btn danger" id="btnReset">مسح الكل</button>
+    </div>
   </div>
 
-  <iframe id="result"></iframe>
+  <div class="main">
+    <!-- Editor panel -->
+    <section class="panel">
+      <div class="panel-head">
+        <h2>المحرر</h2>
+        <div class="tabs">
+          <button class="tab active" data-tab="html">HTML</button>
+          <button class="tab" data-tab="css">CSS</button>
+          <button class="tab" data-tab="js">JS</button>
+          <button class="tab" data-tab="files">الملفات</button>
+        </div>
+      </div>
 
-</div>
+      <div class="panel-body" style="flex:1;">
+        <textarea id="codeArea" spellcheck="false"></textarea>
+
+        <!-- Files view -->
+        <div id="filesView" style="display:none; flex:1; min-height:0; overflow:auto;">
+          <div class="status" style="margin-bottom:8px;">
+            <span>الملفات الإضافية تنحقن داخل المعاينة تلقائيًا.</span>
+            <span class="sep">•</span>
+            <span>JS ⇦ script ، CSS ⇦ style</span>
+          </div>
+          <div class="files-wrap" id="filesList"></div>
+          <div class="status">
+            <span id="filesCount">0 ملفات</span>
+            <span class="sep">•</span>
+            <span>الحفظ تلقائي</span>
+          </div>
+        </div>
+
+        <div class="status">
+          <span id="statusText">جاهز</span>
+          <span class="sep">•</span>
+          <label style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" id="autoRun" checked />
+            <span>تحديث مباشر</span>
+          </label>
+          <span class="sep">•</span>
+          <span>الحفظ: تلقائي</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Preview panel -->
+    <section class="panel">
+      <div class="panel-head">
+        <h2>المعاينة (يمين)</h2>
+        <div class="status" style="padding:0; margin:0;">
+          <span>خط Tajawal داخل المعاينة</span>
+        </div>
+      </div>
+      <div class="preview-body">
+        <iframe id="result" sandbox="allow-scripts"></iframe>
+      </div>
+    </section>
+  </div>
+
+  <!-- Hidden inputs for file picking -->
+  <input id="fileInputCode" type="file" style="display:none" accept=".html,.htm,.css,.js,.txt" />
+  <input id="fileInputAsset" type="file" style="display:none" multiple accept=".js,.css,.txt,.json" />
+  <input id="fileInputProject" type="file" style="display:none" accept=".json" />
 
 <script>
-const htmlArea = document.getElementById("html");
-const cssArea  = document.getElementById("css");
-const jsArea   = document.getElementById("js");
+/* =========================
+   Storage + State
+========================= */
+const STORAGE_KEY = "darkcode.project.v2";
 
-/* تحميل الكود المحفوظ */
-htmlArea.value = localStorage.getItem("darkcode_html") || "<h1>Hello World</h1>";
-cssArea.value  = localStorage.getItem("darkcode_css")  || "body { text-align:center; }";
-jsArea.value   = localStorage.getItem("darkcode_js")   || "console.log('شغال');";
+const codeArea = document.getElementById("codeArea");
+const resultFrame = document.getElementById("result");
+const statusText = document.getElementById("statusText");
+const autoRun = document.getElementById("autoRun");
 
-function saveCode() {
-  localStorage.setItem("darkcode_html", htmlArea.value);
-  localStorage.setItem("darkcode_css", cssArea.value);
-  localStorage.setItem("darkcode_js", jsArea.value);
+const filesView = document.getElementById("filesView");
+const filesList = document.getElementById("filesList");
+const filesCount = document.getElementById("filesCount");
+
+const fileInputCode = document.getElementById("fileInputCode");
+const fileInputAsset = document.getElementById("fileInputAsset");
+const fileInputProject = document.getElementById("fileInputProject");
+
+const tabs = Array.from(document.querySelectorAll(".tab"));
+
+let activeTab = "html";
+
+/*
+  assets: [
+    { id, name, type: "js"|"css"|"txt"|"json", content }
+  ]
+*/
+let state = {
+  html: "<h1>Hello World</h1>\n<p>اكتب كودك وشوف النتيجة.</p>\n<button id=\"btn\">اضغطني</button>",
+  css: "body{background:#f2f2f2; text-align:center; padding:18px}\nh1{color:blue}",
+  js: "document.getElementById('btn')?.addEventListener('click',()=>alert('يشتغل!'));",
+  assets: []
+};
+
+function setStatus(msg){
+  statusText.textContent = msg;
+  clearTimeout(setStatus._t);
+  setStatus._t = setTimeout(()=> statusText.textContent = "جاهز", 1200);
 }
 
-function run() {
-  saveCode();
+function save(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function load(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(!raw) return;
+  try{
+    const parsed = JSON.parse(raw);
+    if(parsed && typeof parsed === "object"){
+      state = {
+        html: parsed.html ?? state.html,
+        css: parsed.css ?? state.css,
+        js: parsed.js ?? state.js,
+        assets: Array.isArray(parsed.assets) ? parsed.assets : []
+      };
+    }
+  }catch{}
+}
+
+/* =========================
+   Tabs + Editor binding
+========================= */
+function applyActiveTabToEditor(){
+  if(activeTab === "files"){
+    codeArea.style.display = "none";
+    filesView.style.display = "block";
+    renderFiles();
+    return;
+  }
+  filesView.style.display = "none";
+  codeArea.style.display = "block";
+  codeArea.value = state[activeTab] ?? "";
+}
+
+function commitEditorToState(){
+  if(activeTab === "files") return;
+  state[activeTab] = codeArea.value;
+  save();
+}
+
+function setActiveTab(tab){
+  activeTab = tab;
+  tabs.forEach(t=>{
+    const is = t.dataset.tab === tab;
+    t.classList.toggle("active", is);
+  });
+  applyActiveTabToEditor();
+  if(activeTab !== "files") codeArea.focus();
+  setStatus(`تبويب: ${tab.toUpperCase()}`);
+}
+
+/* =========================
+   Preview build (inject assets)
+========================= */
+function buildAssetsInjection(){
+  // JS assets appended as scripts, CSS assets appended as styles
+  const cssAssets = state.assets.filter(a => a.type === "css").map(a => a.content).join("\n\n/* ---- asset ---- */\n\n");
+  const jsAssets  = state.assets.filter(a => a.type === "js").map(a => a.content).join("\n\n// ---- asset ----\n\n");
+
+  return { cssAssets, jsAssets };
+}
+
+function run(){
+  // always save before run
+  commitEditorToState();
+
+  const { cssAssets, jsAssets } = buildAssetsInjection();
 
   const output = `
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+
 <style>
-body {
-  font-family: 'Tajawal', sans-serif;
-}
-${cssArea.value}
+body{ font-family:'Tajawal', sans-serif; }
+${state.css || ""}
+
+/* ===== CSS Assets ===== */
+${cssAssets || ""}
 </style>
 </head>
 <body>
-
-${htmlArea.value}
+${state.html || ""}
 
 <script>
-${jsArea.value}
+try{
+${state.js || ""}
+
+/* ===== JS Assets ===== */
+${jsAssets || ""}
+}catch(e){
+  document.body.insertAdjacentHTML('beforeend',
+    '<pre style="white-space:pre-wrap;background:#fee2e2;color:#7f1d1d;padding:12px;border-radius:12px;margin-top:12px;">JS Error: ' + e + '</pre>'
+  );
+  console.error(e);
+}
 <\/script>
-
 </body>
-</html>
-`;
-
-  document.getElementById("result").srcdoc = output;
+</html>`;
+  resultFrame.srcdoc = output;
+  setStatus("تم التحديث");
 }
 
-/* تشغيل وحفظ تلقائي */
-document.querySelectorAll("textarea").forEach(el => {
-  el.addEventListener("input", run);
+let debounceT = null;
+function scheduleRun(){
+  if(!autoRun.checked) return;
+  clearTimeout(debounceT);
+  debounceT = setTimeout(run, 200);
+}
+
+/* =========================
+   Files (Assets) management
+========================= */
+function extToType(name){
+  const n = (name || "").toLowerCase();
+  if(n.endsWith(".js")) return "js";
+  if(n.endsWith(".css")) return "css";
+  if(n.endsWith(".json")) return "json";
+  return "txt";
+}
+
+function uid(){
+  return Math.random().toString(16).slice(2) + Date.now().toString(16);
+}
+
+function renderFiles(){
+  filesList.innerHTML = "";
+  filesCount.textContent = `${state.assets.length} ملفات`;
+
+  if(state.assets.length === 0){
+    const empty = document.createElement("div");
+    empty.className = "status";
+    empty.textContent = "لا توجد ملفات إضافية. اضغط (إضافة ملف للمشروع).";
+    filesList.appendChild(empty);
+    return;
+  }
+
+  state.assets.forEach(asset=>{
+    const row = document.createElement("div");
+    row.className = "file-item";
+
+    const meta = document.createElement("div");
+    meta.className = "file-meta";
+    const name = document.createElement("div");
+    name.className = "file-name";
+    name.textContent = asset.name;
+    const type = document.createElement("div");
+    type.className = "file-type";
+    type.textContent = `النوع: ${asset.type.toUpperCase()} • يشتغل داخل المعاينة: ${asset.type === "js" || asset.type === "css" ? "نعم" : "لا"}`;
+    meta.appendChild(name);
+    meta.appendChild(type);
+
+    const acts = document.createElement("div");
+    acts.className = "file-actions";
+
+    const btnView = document.createElement("button");
+    btnView.className = "btn mini";
+    btnView.textContent = "عرض/تعديل";
+    btnView.onclick = () => openAssetEditor(asset.id);
+
+    const btnRemove = document.createElement("button");
+    btnRemove.className = "btn mini danger";
+    btnRemove.textContent = "حذف";
+    btnRemove.onclick = () => removeAsset(asset.id);
+
+    acts.appendChild(btnView);
+    acts.appendChild(btnRemove);
+
+    row.appendChild(meta);
+    row.appendChild(acts);
+
+    filesList.appendChild(row);
+  });
+}
+
+function removeAsset(id){
+  state.assets = state.assets.filter(a => a.id !== id);
+  save();
+  renderFiles();
+  run();
+  setStatus("تم حذف الملف");
+}
+
+function openAssetEditor(id){
+  const asset = state.assets.find(a => a.id === id);
+  if(!asset) return;
+
+  // Simple prompt-based editor to keep it single-file + lightweight
+  // If you want, I can upgrade it لواجهة تحرير داخل الصفحة.
+  const newContent = prompt(
+    `تعديل محتوى الملف: ${asset.name}\n(انسخ/الصق وعدّل ثم OK)\nملاحظة: للمحتوى الطويل جدًا يفضل تصدير/استيراد مشروع.`,
+    asset.content
+  );
+  if(newContent === null) return;
+  asset.content = newContent;
+  save();
+  renderFiles();
+  run();
+  setStatus("تم تعديل الملف");
+}
+
+/* =========================
+   Import code (into editor)
+========================= */
+async function readFileText(file){
+  return await file.text();
+}
+
+async function importCodeFile(file){
+  const text = await readFileText(file);
+  const type = extToType(file.name);
+
+  // If file is html/css/js: load into that tab.
+  if(type === "js" || type === "css"){
+    state[type] = text;
+    save();
+    setActiveTab(type);
+    run();
+    setStatus(`تم استيراد ${file.name}`);
+    return;
+  }
+  if(file.name.toLowerCase().endsWith(".html") || file.name.toLowerCase().endsWith(".htm")){
+    state.html = text;
+    save();
+    setActiveTab("html");
+    run();
+    setStatus(`تم استيراد ${file.name}`);
+    return;
+  }
+
+  // txt: ask where to put it
+  const where = prompt("الملف TXT. تبيه يروح وين؟ اكتب: html أو css أو js", "html");
+  const w = (where || "html").toLowerCase().trim();
+  if(["html","css","js"].includes(w)){
+    state[w] = text;
+    save();
+    setActiveTab(w);
+    run();
+    setStatus(`تم استيراد ${file.name}`);
+  }else{
+    setStatus("تم إلغاء الاستيراد");
+  }
+}
+
+/* =========================
+   Add assets (multiple files)
+========================= */
+async function addAssetFiles(fileList){
+  const files = Array.from(fileList || []);
+  for(const f of files){
+    const type = extToType(f.name);
+    const content = await readFileText(f);
+
+    // for json assets: keep as text (won't auto-run), user can use it in JS via copy/paste if needed
+    state.assets.push({
+      id: uid(),
+      name: f.name,
+      type,
+      content
+    });
+  }
+  save();
+  if(activeTab === "files") renderFiles();
+  run();
+  setStatus("تمت إضافة الملفات");
+}
+
+/* =========================
+   Export/Import project JSON
+========================= */
+function downloadText(filename, text){
+  const blob = new Blob([text], {type:"application/json;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function exportProject(){
+  const payload = JSON.stringify(state, null, 2);
+  const filename = `darkcode-project-${new Date().toISOString().slice(0,10)}.json`;
+  downloadText(filename, payload);
+  setStatus("تم تصدير المشروع");
+}
+
+async function importProjectFile(file){
+  const text = await readFileText(file);
+  try{
+    const parsed = JSON.parse(text);
+    if(!parsed || typeof parsed !== "object") throw new Error("bad");
+    state = {
+      html: parsed.html ?? "",
+      css: parsed.css ?? "",
+      js: parsed.js ?? "",
+      assets: Array.isArray(parsed.assets) ? parsed.assets : []
+    };
+    save();
+    setActiveTab("html");
+    run();
+    setStatus("تم استيراد المشروع");
+  }catch{
+    setStatus("ملف المشروع غير صالح");
+  }
+}
+
+/* =========================
+   UI events
+========================= */
+document.getElementById("btnRun").addEventListener("click", run);
+
+document.getElementById("btnReset").addEventListener("click", ()=>{
+  if(!confirm("أكيد تبي مسح كل شيء؟")) return;
+  localStorage.removeItem(STORAGE_KEY);
+  state = { html:"", css:"", js:"", assets:[] };
+  setActiveTab("html");
+  run();
+  setStatus("تم مسح الكل");
 });
 
+document.getElementById("btnImportCode").addEventListener("click", ()=>{
+  fileInputCode.value = "";
+  fileInputCode.click();
+});
+fileInputCode.addEventListener("change", async (e)=>{
+  const file = e.target.files?.[0];
+  if(!file) return;
+  await importCodeFile(file);
+});
+
+document.getElementById("btnAddAsset").addEventListener("click", ()=>{
+  fileInputAsset.value = "";
+  fileInputAsset.click();
+});
+fileInputAsset.addEventListener("change", async (e)=>{
+  const files = e.target.files;
+  if(!files || files.length === 0) return;
+  await addAssetFiles(files);
+});
+
+document.getElementById("btnExportProject").addEventListener("click", exportProject);
+
+document.getElementById("btnImportProject").addEventListener("click", ()=>{
+  fileInputProject.value = "";
+  fileInputProject.click();
+});
+fileInputProject.addEventListener("change", async (e)=>{
+  const file = e.target.files?.[0];
+  if(!file) return;
+  await importProjectFile(file);
+});
+
+tabs.forEach(btn=>{
+  btn.addEventListener("click", ()=> setActiveTab(btn.dataset.tab));
+});
+
+codeArea.addEventListener("input", ()=>{
+  // update state for current tab + run if enabled
+  commitEditorToState();
+  scheduleRun();
+});
+
+codeArea.addEventListener("blur", ()=> commitEditorToState());
+
+/* =========================
+   Init
+========================= */
+load();
+setActiveTab("html");
 run();
 </script>
-
 </body>
 </html>
