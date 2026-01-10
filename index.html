@@ -2,11 +2,18 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>CodePen Like Editor</title>
+<title>Dark Code Test</title>
 
 <style>
+body {
+  margin: 0;
+  font-family: monospace;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
 
-  /* الشريط العلوي */
+/* الشريط العلوي */
 .topbar {
   height: 50px;
   background: #111;
@@ -34,19 +41,25 @@
   font-size: 16px;
   font-weight: bold;
 }
-  
-body {
-  margin: 0;
-  font-family: monospace;
+
+/* المحتوى الرئيسي */
+.main {
+  flex: 1;
   display: flex;
-  height: 100vh;
 }
 
+/* المحرر */
 .editor {
   width: 50%;
   background: #1e1e1e;
   display: flex;
   flex-direction: column;
+}
+
+label {
+  background: #333;
+  color: #fff;
+  padding: 5px;
 }
 
 textarea {
@@ -60,12 +73,7 @@ textarea {
   font-size: 14px;
 }
 
-label {
-  background: #333;
-  color: #fff;
-  padding: 5px;
-}
-
+/* النتيجة */
 iframe {
   width: 50%;
   border: none;
@@ -76,16 +84,25 @@ iframe {
 
 <body>
 
-<div class="editor">
-  <label>HTML</label>
-  <textarea id="html">
+<!-- الشريط العلوي -->
+<div class="topbar">
+  <div class="logo">DC</div>
+  <div class="site-name">Dark Code Test</div>
+</div>
+
+<!-- المحتوى -->
+<div class="main">
+
+  <div class="editor">
+    <label>HTML</label>
+    <textarea id="html">
 <h1>Hello World</h1>
 <p>هذا مثل CodePen</p>
 <button onclick="alert('يشتغل!')">اضغطني</button>
-  </textarea>
+    </textarea>
 
-  <label>CSS</label>
-  <textarea id="css">
+    <label>CSS</label>
+    <textarea id="css">
 body {
   font-family: Arial;
   background: #f2f2f2;
@@ -94,15 +111,17 @@ body {
 h1 {
   color: blue;
 }
-  </textarea>
+    </textarea>
 
-  <label>JavaScript</label>
-  <textarea id="js">
+    <label>JavaScript</label>
+    <textarea id="js">
 console.log("JavaScript شغال");
-  </textarea>
-</div>
+    </textarea>
+  </div>
 
-<iframe id="result"></iframe>
+  <iframe id="result"></iframe>
+
+</div>
 
 <script>
 function run() {
@@ -130,7 +149,7 @@ document.querySelectorAll("textarea").forEach(el => {
   el.addEventListener("input", run);
 });
 
-run(); // تشغيل أول ما تفتح الصفحة
+run();
 </script>
 
 </body>
