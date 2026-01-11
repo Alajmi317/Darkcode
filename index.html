@@ -1,256 +1,1054 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<title>CodePen Like Editor + Owner Panel</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>محرر + لوحة تحكم الأونر</title>
 
-<style>
-body {
-  margin: 0;
-  font-family: monospace;
-  display: flex;
-  height: 100vh;
-}
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:#0f1a2e;
+      --panel2:#101c33;
+      --line:#223255;
+      --text:#e8eefc;
+      --muted:#a9b7dd;
+      --accent:#6aa6ff;
+      --accent2:#7df0c6;
+      --danger:#ff6a6a;
+      --warn:#ffd36a;
+      --ok:#67ff9e;
+      --shadow: 0 14px 40px rgba(0,0,0,.40);
+      --radius:18px;
+    }
 
-/* ===== المحرر ===== */
-.editor {
-  width: 50%;
-  background: #1e1e1e;
-  display: flex;
-  flex-direction: column;
-}
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:linear-gradient(180deg, var(--bg), #070b14);
+      color:var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      height:100vh;
+      overflow:hidden;
+    }
 
-label {
-  background: #333;
-  color: #fff;
-  padding: 6px 10px;
-}
+    .app{display:flex; height:100vh; width:100%;}
+    .main{flex:1; display:flex; height:100%;}
 
-textarea {
-  flex: 1;
-  background: #252526;
-  color: #fff;
-  border: none;
-  padding: 10px;
-  resize: none;
-  outline: none;
-  font-size: 14px;
-  border-bottom: 1px solid #333;
-}
+    /* ===== محرر/معاينة ===== */
+    .editor{
+      width:50%;
+      min-width:420px;
+      background:#0a1020;
+      border-left:1px solid var(--line);
+      display:flex;
+      flex-direction:column;
+    }
 
-/* ===== المعاينة ===== */
-iframe {
-  width: 50%;
-  border: none;
-  background: white;
-}
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:10px 12px;
+      border-bottom:1px solid var(--line);
+      background:rgba(255,255,255,.02);
+    }
+    .topbar .left{
+      display:flex; align-items:center; gap:8px;
+      min-width:0;
+    }
+    .brand{
+      font-weight:900;
+      font-size:13px;
+      letter-spacing:.2px;
+      white-space:nowrap;
+    }
+    .badge{
+      font-size:12px;
+      color:var(--muted);
+      border:1px solid var(--line);
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.03);
+      white-space:nowrap;
+    }
+    .topbar .right{
+      display:flex; align-items:center; gap:8px;
+    }
 
-/* ===== زر الأونر ===== */
-#adminIcon{
-  position:fixed;
-  top:15px;
-  right:15px;
-  width:42px;
-  height:42px;
-  background:#222;
-  color:#fff;
-  border-radius:10px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  cursor:pointer;
-  z-index:9999;
-  font-size:20px;
-}
-#adminIcon:hover{background:#444}
+    .icon-btn{
+      width:40px; height:40px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      color:var(--text);
+      cursor:pointer;
+      display:grid; place-items:center;
+      font-size:18px;
+      user-select:none;
+      transition:.15s ease;
+    }
+    .icon-btn:hover{
+      transform:translateY(-1px);
+      border-color:rgba(106,166,255,.6);
+      background:rgba(255,255,255,.06);
+    }
+    .icon-btn:active{transform:translateY(0)}
 
-/* ===== Overlay ===== */
-.admin-overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.6);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:10000;
-}
+    .tabs{
+      display:flex;
+      gap:8px;
+      padding:10px 12px;
+      border-bottom:1px solid var(--line);
+      background:rgba(255,255,255,.01);
+    }
+    .tab{
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.02);
+      color:var(--muted);
+      cursor:pointer;
+      font-weight:800;
+      font-size:12px;
+      user-select:none;
+    }
+    .tab.active{
+      color:var(--text);
+      border-color:rgba(106,166,255,.55);
+      background:rgba(106,166,255,.12);
+    }
 
-/* ===== صندوق ===== */
-.admin-box{
-  background:#1e1e1e;
-  padding:20px;
-  border-radius:14px;
-  width:320px;
-  color:#fff;
-  text-align:center;
-}
-.admin-box input{
-  width:100%;
-  padding:10px;
-  margin:10px 0;
-  border:none;
-  border-radius:8px;
-}
-.admin-box button{
-  width:100%;
-  padding:10px;
-  margin-top:8px;
-  border:none;
-  border-radius:8px;
-  background:#3a6cff;
-  color:white;
-  cursor:pointer;
-  font-size:14px;
-}
-.admin-box button.danger{background:#a33}
-#loginError{
-  color:#ff6a6a;
-  font-size:13px;
-}
+    .code-area{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      padding:10px 12px;
+      gap:10px;
+      overflow:hidden;
+    }
+    .label-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .label-row .title{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:800;
+    }
+    .label-row .status{
+      font-size:12px;
+      color:var(--muted);
+      white-space:nowrap;
+    }
 
-/* إخفاء */
-.hidden{display:none}
-</style>
+    textarea.code{
+      flex:1;
+      resize:none;
+      width:100%;
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      background:rgba(255,255,255,.03);
+      padding:12px;
+      color:var(--text);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size:13px;
+      line-height:1.45;
+      outline:none;
+      overflow:auto;
+      white-space:pre-wrap;
+    }
+
+    iframe{
+      width:50%;
+      border:none;
+      background:#fff;
+      height:100%;
+    }
+
+    .hidden{display:none !important;}
+
+    /* ===== لوحة الأونر (Overlay Drawer) ===== */
+    .overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.55);
+      display:none;
+      z-index:9999;
+    }
+    .overlay.show{display:block}
+
+    .drawer{
+      position:fixed;
+      top:0;
+      right:0;
+      height:100vh;
+      width:min(420px, 92vw);
+      background:linear-gradient(180deg, var(--panel), var(--panel2));
+      border-right:1px solid var(--line);
+      box-shadow: var(--shadow);
+      transform:translateX(100%);
+      transition:.18s ease;
+      z-index:10000;
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+    }
+    .drawer.show{transform:translateX(0)}
+
+    .drawer-header{
+      padding:14px 14px 10px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .drawer-title{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      min-width:0;
+    }
+    .drawer-title .h{
+      margin:0;
+      font-size:14px;
+      font-weight:900;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .drawer-title .p{
+      margin:0;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.4;
+    }
+    .drawer-body{
+      padding:12px 14px 14px;
+      overflow:auto;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .card{
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      background:rgba(255,255,255,.02);
+      padding:12px;
+    }
+    .card h3{
+      margin:0 0 10px;
+      font-size:13px;
+      color:var(--muted);
+      font-weight:900;
+    }
+
+    .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+    .grid1{display:grid; grid-template-columns:1fr; gap:10px;}
+
+    button, input, select, textarea.small{
+      font:inherit;
+      color:var(--text);
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      outline:none;
+    }
+    input, select{
+      padding:10px 12px;
+      width:100%;
+    }
+    textarea.small{
+      padding:10px 12px;
+      width:100%;
+      min-height:92px;
+      resize:vertical;
+      line-height:1.4;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size:12.5px;
+    }
+    button{
+      padding:10px 12px;
+      cursor:pointer;
+      transition:.15s ease;
+      font-weight:900;
+      user-select:none;
+    }
+    button:hover{transform:translateY(-1px); border-color:#2c4274; background:rgba(255,255,255,.06);}
+    button:active{transform:translateY(0);}
+
+    .btn-primary{border-color:rgba(106,166,255,.5); background:rgba(106,166,255,.12);}
+    .btn-danger{border-color:rgba(255,106,106,.5); background:rgba(255,106,106,.10);}
+    .btn-warn{border-color:rgba(255,211,106,.55); background:rgba(255,211,106,.10);}
+    .btn-ok{border-color:rgba(103,255,158,.45); background:rgba(103,255,158,.10);}
+
+    .hint{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.55;
+      margin:0;
+    }
+
+    .snip-item{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:10px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:rgba(255,255,255,.02);
+    }
+    .snip-meta{min-width:0}
+    .snip-name{
+      font-size:13px;
+      font-weight:900;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:220px;
+    }
+    .snip-type{font-size:12px; color:var(--muted);}
+    .snip-actions{display:flex; gap:8px; flex-shrink:0;}
+    .snip-actions button{padding:8px 10px; font-size:12px; border-radius:12px;}
+
+    .toast{
+      position:fixed;
+      left:16px;
+      bottom:16px;
+      background:rgba(16,28,51,.92);
+      border:1px solid var(--line);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:14px;
+      box-shadow: var(--shadow);
+      font-size:12.5px;
+      opacity:0;
+      transform:translateY(10px);
+      pointer-events:none;
+      transition:.18s ease;
+      z-index:10001;
+    }
+    .toast.show{opacity:1; transform:translateY(0);}
+
+    /* Modal login */
+    .modalOverlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.62);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+      z-index:10002;
+    }
+    .modalOverlay.show{display:flex}
+    .modal{
+      width:min(420px, 94vw);
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, var(--panel), var(--panel2));
+      border-radius:18px;
+      padding:16px;
+      box-shadow: var(--shadow);
+    }
+    .modal h2{margin:0 0 10px; font-size:15px; font-weight:900;}
+    .error{color:var(--danger); font-size:12.5px; margin-top:8px;}
+
+    @media (max-width: 980px){
+      body{overflow:auto}
+      .app{flex-direction:column; height:auto;}
+      .main{flex-direction:column;}
+      .editor, iframe{width:100%; min-width:unset; height:70vh;}
+      iframe{height:70vh;}
+    }
+  </style>
 </head>
 
 <body>
+  <div class="app">
+    <div class="main">
+      <div class="editor" id="editorWrap">
+        <div class="topbar">
+          <div class="left">
+            <div class="brand">محرر خاص</div>
+            <div class="badge" id="ownerBadge">Guest</div>
+          </div>
 
-<!-- زر لوحة التحكم -->
-<div id="adminIcon">⚙️</div>
+          <div class="right">
+            <button class="icon-btn" id="btnRun" title="تشغيل (Ctrl+Enter)">▶</button>
+            <button class="icon-btn" id="btnOwner" title="لوحة الأونر">⚙️</button>
+          </div>
+        </div>
 
-<!-- تسجيل دخول الأونر -->
-<div id="ownerLogin" class="admin-overlay">
-  <div class="admin-box">
-    <h3>دخول الأونر</h3>
-    <input type="password" id="ownerPass" placeholder="كلمة مرور الأونر">
-    <button onclick="loginOwner()">دخول</button>
-    <p id="loginError"></p>
+        <div class="tabs">
+          <div class="tab active" data-tab="html">HTML</div>
+          <div class="tab" data-tab="css">CSS</div>
+          <div class="tab" data-tab="js">JS</div>
+        </div>
+
+        <div class="code-area">
+          <div class="label-row">
+            <div class="title" id="activeTitle">محرر HTML</div>
+            <div class="status" id="saveStatus">محفوظ</div>
+          </div>
+          <textarea class="code" id="editor"></textarea>
+        </div>
+      </div>
+
+      <iframe id="preview"></iframe>
+    </div>
   </div>
-</div>
 
-<!-- لوحة تحكم الأونر -->
-<div id="adminPanel" class="admin-overlay">
-  <div class="admin-box">
-    <h3>لوحة تحكم الأونر</h3>
+  <!-- Overlay + Drawer -->
+  <div class="overlay" id="overlay"></div>
 
-    <button onclick="toggleEditor()">إظهار / إخفاء المحرر</button>
-    <button onclick="toggleLock()">قفل / فتح التعديل</button>
-    <button class="danger" onclick="logoutOwner()">تسجيل خروج</button>
+  <aside class="drawer" id="drawer">
+    <div class="drawer-header">
+      <div class="drawer-title">
+        <p class="h">لوحة تحكم الأونر</p>
+        <p class="p">تحكم كامل بالمحرر، اختصارات، إعدادات، وتصدير.</p>
+      </div>
+      <button class="icon-btn" id="btnCloseDrawer" title="إغلاق">✕</button>
+    </div>
 
-    <p style="font-size:12px;opacity:.7;margin-top:10px">
-      هذه اللوحة خاصة بالأونر فقط
-    </p>
+    <div class="drawer-body">
+
+      <div class="card">
+        <h3>أدوات سريعة</h3>
+        <div class="grid2">
+          <button class="btn-primary" id="adminRun">تشغيل</button>
+          <button class="btn-ok" id="adminSave">حفظ</button>
+          <button id="adminCopy">نسخ الكل</button>
+          <button class="btn-warn" id="adminExport">تصدير HTML</button>
+          <button class="btn-warn" id="adminDownload">تنزيل الملف</button>
+          <button class="btn-danger" id="adminReset">إعادة ضبط</button>
+        </div>
+        <p class="hint" style="margin-top:10px">
+          اختصارات: Ctrl+Enter تشغيل، Ctrl+S حفظ، Ctrl+Shift+C نسخ، Ctrl+Shift+R إعادة ضبط.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>تحكم بالمحرر</h3>
+        <div class="grid2">
+          <button id="adminToggleEditor">إظهار/إخفاء المحرر</button>
+          <button id="adminToggleLock">قفل/فتح التعديل</button>
+        </div>
+        <div class="grid1" style="margin-top:10px">
+          <label class="hint">
+            <input type="checkbox" id="optAutoRun" style="width:auto; margin-left:8px;">
+            تشغيل تلقائي بعد ثانية من الكتابة
+          </label>
+          <label class="hint">
+            <input type="checkbox" id="optWrap" style="width:auto; margin-left:8px;" checked>
+            لفّ السطور (Word Wrap)
+          </label>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>اختصارات (Snippets)</h3>
+        <div class="grid1">
+          <input id="snipName" placeholder="اسم الاختصار (مثال: زر فخم)" />
+          <select id="snipType">
+            <option value="html">HTML</option>
+            <option value="css">CSS</option>
+            <option value="js">JS</option>
+          </select>
+          <textarea id="snipCode" class="small" placeholder="اكتب كود الاختصار هنا..."></textarea>
+          <button class="btn-primary" id="btnAddSnippet">إضافة الاختصار</button>
+          <p class="hint">الضغط على “إدراج” يضيف الكود في مكان المؤشر، وينقلك للتبويب المناسب تلقائياً.</p>
+        </div>
+
+        <div class="grid1" style="margin-top:10px" id="snipList"></div>
+        <p class="hint" id="snipEmpty" style="display:none; margin-top:10px;">لا توجد اختصارات محفوظة.</p>
+      </div>
+
+      <div class="card">
+        <h3>تحديد الوصول (واجهة فقط)</h3>
+        <p class="hint">
+          هذا الخيار “تنظيمي” داخل المتصفح فقط، وليس أمان حقيقي بدون سيرفر.
+        </p>
+        <div class="grid1" style="margin-top:10px">
+          <select id="accessMode">
+            <option value="ownerOnly">Owner فقط</option>
+            <option value="open">مفتوح (بدون قيود)</option>
+          </select>
+          <button class="btn-danger" id="btnLogout">تسجيل خروج الأونر</button>
+        </div>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- Owner Login Modal -->
+  <div class="modalOverlay" id="loginModal">
+    <div class="modal">
+      <h2>دخول الأونر</h2>
+      <p class="hint">أدخل كلمة مرور الأونر للوصول للوحة التحكم.</p>
+      <input type="password" id="ownerPass" placeholder="كلمة مرور الأونر" />
+      <div class="grid2" style="margin-top:10px">
+        <button class="btn-primary" id="btnLogin">دخول</button>
+        <button id="btnCancelLogin">إلغاء</button>
+      </div>
+      <div class="error" id="loginError" style="display:none"></div>
+    </div>
   </div>
-</div>
 
-<!-- ===== المحرر ===== -->
-<div class="editor" id="editor">
-  <label>HTML</label>
-  <textarea id="html">
-<h1>Hello World</h1>
-<p>هذا مثل CodePen</p>
-<button onclick="alert('تم الضغط')">اضغطني</button>
-  </textarea>
+  <div class="toast" id="toast"></div>
 
-  <label>CSS</label>
-  <textarea id="css">
-body {
-  font-family: Arial;
-  background: #f5f5f5;
-}
-h1 {
-  color: #333;
-}
-  </textarea>
+  <script>
+    /***************
+     * إعدادات الأونر
+     ***************/
+    const OWNER_PASSWORD = "123456"; // غيّرها فوراً
 
-  <label>JavaScript</label>
-  <textarea id="js">
-console.log("Hello from JS");
-  </textarea>
-</div>
+    /***************
+     * مفاتيح التخزين
+     ***************/
+    const LS = {
+      html: "pen_html_v2",
+      css: "pen_css_v2",
+      js: "pen_js_v2",
+      snippets: "pen_snippets_v2",
+      settings: "pen_settings_v2",
+      owner: "pen_isOwner_v2",
+      access: "pen_access_mode_v2"
+    };
 
-<iframe id="result"></iframe>
+    /***************
+     * الحالة الافتراضية
+     ***************/
+    const defaults = {
+      html: `<h1 style="font-family:system-ui;margin:0 0 10px">Hello World</h1>
+<p style="font-family:system-ui;margin:0 0 14px">هذا محرر مثل CodePen مع لوحة تحكم للأونر.</p>
+<button id="btn">اضغطني</button>`,
+      css: `body{ margin:20px; font-family:system-ui; background:#f6f7fb; }
+#btn{ padding:10px 14px; border-radius:12px; border:1px solid #ddd; cursor:pointer; }`,
+      js: `document.getElementById("btn")?.addEventListener("click", ()=> alert("تم!"));`
+    };
 
-<script>
-/* ===== كلمة مرور الأونر ===== */
-const OWNER_PASSWORD = "9732"; // غيرها فوراً
+    /***************
+     * عناصر الواجهة
+     ***************/
+    const tabs = document.querySelectorAll(".tab");
+    const editor = document.getElementById("editor");
+    const preview = document.getElementById("preview");
+    const activeTitle = document.getElementById("activeTitle");
+    const saveStatus = document.getElementById("saveStatus");
+    const ownerBadge = document.getElementById("ownerBadge");
 
-const adminIcon  = document.getElementById("adminIcon");
-const ownerLogin = document.getElementById("ownerLogin");
-const adminPanel = document.getElementById("adminPanel");
-const loginError = document.getElementById("loginError");
-const editorBox  = document.getElementById("editor");
-const textareas  = document.querySelectorAll("textarea");
+    const btnRun = document.getElementById("btnRun");
+    const btnOwner = document.getElementById("btnOwner");
 
-/* ===== فتح لوحة التحكم ===== */
-adminIcon.onclick = () => {
-  if(localStorage.getItem("isOwner") === "true"){
-    adminPanel.style.display = "flex";
-  }else{
-    ownerLogin.style.display = "flex";
-  }
-};
+    const overlay = document.getElementById("overlay");
+    const drawer = document.getElementById("drawer");
+    const btnCloseDrawer = document.getElementById("btnCloseDrawer");
 
-/* ===== تسجيل الدخول ===== */
-function loginOwner(){
-  const pass = document.getElementById("ownerPass").value;
-  if(pass === OWNER_PASSWORD){
-    localStorage.setItem("isOwner","true");
-    ownerLogin.style.display = "none";
-    adminPanel.style.display = "flex";
-    loginError.textContent = "";
-  }else{
-    loginError.textContent = "كلمة المرور غير صحيحة";
-  }
-}
+    const loginModal = document.getElementById("loginModal");
+    const ownerPass = document.getElementById("ownerPass");
+    const btnLogin = document.getElementById("btnLogin");
+    const btnCancelLogin = document.getElementById("btnCancelLogin");
+    const loginError = document.getElementById("loginError");
 
-/* ===== تسجيل خروج ===== */
-function logoutOwner(){
-  localStorage.removeItem("isOwner");
-  adminPanel.style.display = "none";
-}
+    const toast = document.getElementById("toast");
+    const editorWrap = document.getElementById("editorWrap");
 
-/* ===== إظهار / إخفاء المحرر ===== */
-function toggleEditor(){
-  editorBox.classList.toggle("hidden");
-}
+    // Admin controls
+    const adminRun = document.getElementById("adminRun");
+    const adminSave = document.getElementById("adminSave");
+    const adminCopy = document.getElementById("adminCopy");
+    const adminExport = document.getElementById("adminExport");
+    const adminDownload = document.getElementById("adminDownload");
+    const adminReset = document.getElementById("adminReset");
+    const adminToggleEditor = document.getElementById("adminToggleEditor");
+    const adminToggleLock = document.getElementById("adminToggleLock");
 
-/* ===== قفل / فتح التعديل ===== */
-function toggleLock(){
-  textareas.forEach(t => {
-    t.readOnly = !t.readOnly;
-  });
-}
+    const optAutoRun = document.getElementById("optAutoRun");
+    const optWrap = document.getElementById("optWrap");
+    const accessMode = document.getElementById("accessMode");
+    const btnLogout = document.getElementById("btnLogout");
 
-/* ===== إغلاق عند الضغط خارج ===== */
-document.querySelectorAll(".admin-overlay").forEach(ov=>{
-  ov.onclick = e => { if(e.target === ov) ov.style.display="none"; }
-});
+    // Snippets
+    const snipName = document.getElementById("snipName");
+    const snipType = document.getElementById("snipType");
+    const snipCode = document.getElementById("snipCode");
+    const btnAddSnippet = document.getElementById("btnAddSnippet");
+    const snipList = document.getElementById("snipList");
+    const snipEmpty = document.getElementById("snipEmpty");
 
-/* ===== تشغيل الكود ===== */
-function runCode() {
-  const html = document.getElementById("html").value;
-  const css  = document.getElementById("css").value;
-  const js   = document.getElementById("js").value;
+    /***************
+     * حالة عامة
+     ***************/
+    let activeTab = "html";
+    let autoRunTimer = null;
 
-  const output = `
+    /***************
+     * Utils
+     ***************/
+    function isOwner(){ return localStorage.getItem(LS.owner) === "true"; }
+
+    function showToast(msg){
+      toast.textContent = msg;
+      toast.classList.add("show");
+      setTimeout(()=> toast.classList.remove("show"), 1400);
+    }
+
+    function setSaved(){
+      saveStatus.textContent = "محفوظ";
+      saveStatus.style.color = "var(--muted)";
+    }
+    function setDirty(){
+      saveStatus.textContent = "غير محفوظ";
+      saveStatus.style.color = "var(--warn)";
+    }
+
+    function getAllCode(){
+      return {
+        html: localStorage.getItem(LS.html) ?? defaults.html,
+        css: localStorage.getItem(LS.css) ?? defaults.css,
+        js: localStorage.getItem(LS.js) ?? defaults.js
+      };
+    }
+
+    function saveCode(type, value){
+      localStorage.setItem(LS[type], value);
+      setSaved();
+    }
+
+    function buildPreview(){
+      const { html, css, js } = getAllCode();
+      const doc = `
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <style>${css}</style>
 </head>
 <body>
 ${html}
-<script>${js}<\/script>
-</body>
-</html>
-  `;
-  document.getElementById("result").srcdoc = output;
+<script>
+try {
+${js}
+} catch(e) {
+  const pre = document.createElement('pre');
+  pre.style.cssText = 'background:#111;color:#ffb4b4;padding:12px;border-radius:12px;white-space:pre-wrap;';
+  pre.textContent = 'JS Error: ' + (e && e.message ? e.message : e);
+  document.body.appendChild(pre);
 }
+<\/script>
+</body>
+</html>`;
+      preview.srcdoc = doc;
+    }
 
-textareas.forEach(el => el.addEventListener("input", runCode));
-runCode();
-</script>
+    function updateEditorFromStorage(){
+      const all = getAllCode();
+      editor.value = all[activeTab];
+      applyWrap();
+      setSaved();
+    }
 
+    function switchTab(type){
+      activeTab = type;
+      tabs.forEach(t => t.classList.toggle("active", t.dataset.tab === type));
+      activeTitle.textContent = `محرر ${type.toUpperCase()}`;
+      updateEditorFromStorage();
+    }
+
+    function applyWrap(){
+      editor.style.whiteSpace = optWrap.checked ? "pre-wrap" : "pre";
+    }
+
+    function insertAtCursor(text){
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+      editor.value = editor.value.slice(0, start) + text + editor.value.slice(end);
+      const pos = start + text.length;
+      editor.focus();
+      editor.setSelectionRange(pos, pos);
+      setDirty();
+    }
+
+    function exportHtml(){
+      const { html, css, js } = getAllCode();
+      return `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Export</title>
+<style>
+${css}
+</style>
+</head>
+<body>
+${html}
+<script>
+${js}
+<\/script>
+</body>
+</html>`;
+    }
+
+    /***************
+     * Settings
+     ***************/
+    function loadSettings(){
+      try { return JSON.parse(localStorage.getItem(LS.settings) || "{}"); }
+      catch { return {}; }
+    }
+    function saveSettings(s){
+      localStorage.setItem(LS.settings, JSON.stringify(s));
+    }
+    function applySettings(){
+      const s = loadSettings();
+      optAutoRun.checked = !!s.autoRun;
+      optWrap.checked = s.wrap !== undefined ? !!s.wrap : true;
+      applyWrap();
+
+      const mode = localStorage.getItem(LS.access) || "ownerOnly";
+      accessMode.value = mode;
+      updateOwnerBadge();
+    }
+    function updateOwnerBadge(){
+      const mode = localStorage.getItem(LS.access) || "ownerOnly";
+      if (isOwner()) ownerBadge.textContent = "Owner";
+      else ownerBadge.textContent = (mode === "open") ? "Open" : "Guest";
+    }
+
+    /***************
+     * Access Mode (واجهة فقط)
+     ***************/
+    function canOpenAdmin(){
+      const mode = localStorage.getItem(LS.access) || "ownerOnly";
+      if (mode === "open") return true; // مفتوح (للتجربة)
+      return isOwner(); // Owner فقط
+    }
+
+    /***************
+     * Drawer / Login
+     ***************/
+    function openDrawer(){
+      overlay.classList.add("show");
+      drawer.classList.add("show");
+    }
+    function closeDrawer(){
+      overlay.classList.remove("show");
+      drawer.classList.remove("show");
+    }
+
+    function openLogin(){
+      loginError.style.display = "none";
+      loginError.textContent = "";
+      ownerPass.value = "";
+      loginModal.classList.add("show");
+      setTimeout(()=> ownerPass.focus(), 50);
+    }
+    function closeLogin(){
+      loginModal.classList.remove("show");
+    }
+
+    function loginOwner(){
+      const pass = ownerPass.value;
+      if (pass === OWNER_PASSWORD){
+        localStorage.setItem(LS.owner, "true");
+        updateOwnerBadge();
+        closeLogin();
+        openDrawer();
+        showToast("تم الدخول كأونر");
+      } else {
+        loginError.style.display = "block";
+        loginError.textContent = "كلمة المرور غير صحيحة";
+      }
+    }
+
+    function logoutOwner(){
+      localStorage.removeItem(LS.owner);
+      updateOwnerBadge();
+      closeDrawer();
+      showToast("تم تسجيل الخروج");
+    }
+
+    /***************
+     * Snippets
+     ***************/
+    function loadSnips(){
+      try { return JSON.parse(localStorage.getItem(LS.snippets) || "[]"); }
+      catch { return []; }
+    }
+    function saveSnips(list){
+      localStorage.setItem(LS.snippets, JSON.stringify(list));
+    }
+
+    function renderSnips(){
+      const list = loadSnips();
+      snipList.innerHTML = "";
+      snipEmpty.style.display = list.length ? "none" : "block";
+
+      list.forEach((s, i) => {
+        const row = document.createElement("div");
+        row.className = "snip-item";
+
+        const meta = document.createElement("div");
+        meta.className = "snip-meta";
+        meta.innerHTML = `
+          <div class="snip-name" title="${escapeHtml(s.name)}">${escapeHtml(s.name)}</div>
+          <div class="snip-type">النوع: ${s.type.toUpperCase()}</div>
+        `;
+
+        const actions = document.createElement("div");
+        actions.className = "snip-actions";
+
+        const ins = document.createElement("button");
+        ins.className = "btn-primary";
+        ins.textContent = "إدراج";
+        ins.onclick = () => {
+          if (activeTab !== s.type) switchTab(s.type);
+          insertAtCursor("\n" + s.code + "\n");
+          showToast("تم إدراج الاختصار");
+        };
+
+        const del = document.createElement("button");
+        del.className = "btn-danger";
+        del.textContent = "حذف";
+        del.onclick = () => {
+          const updated = loadSnips().filter((_, idx) => idx !== i);
+          saveSnips(updated);
+          renderSnips();
+          showToast("تم حذف الاختصار");
+        };
+
+        actions.appendChild(ins);
+        actions.appendChild(del);
+
+        row.appendChild(meta);
+        row.appendChild(actions);
+        snipList.appendChild(row);
+      });
+    }
+
+    function escapeHtml(str){
+      return String(str)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    /***************
+     * أحداث المحرر
+     ***************/
+    tabs.forEach(t => t.addEventListener("click", () => switchTab(t.dataset.tab)));
+
+    editor.addEventListener("input", () => {
+      setDirty();
+
+      // حفظ تلقائي داخل التخزين حتى لا يضيع التعديل عند تغيير التبويب
+      saveCode(activeTab, editor.value);
+      setDirty(); // نرجع الحالة "غير محفوظ" كمؤشر بصري
+
+      if (optAutoRun.checked){
+        clearTimeout(autoRunTimer);
+        autoRunTimer = setTimeout(() => {
+          buildPreview();
+          showToast("تشغيل تلقائي");
+        }, 1000);
+      }
+    });
+
+    btnRun.addEventListener("click", () => {
+      saveCode(activeTab, editor.value);
+      buildPreview();
+      showToast("تم التشغيل");
+    });
+
+    /***************
+     * فتح لوحة الأونر
+     ***************/
+    btnOwner.addEventListener("click", () => {
+      const mode = localStorage.getItem(LS.access) || "ownerOnly";
+      if (mode === "open"){
+        openDrawer();
+        return;
+      }
+      if (isOwner()){
+        openDrawer();
+      } else {
+        openLogin();
+      }
+    });
+
+    btnCloseDrawer.addEventListener("click", closeDrawer);
+    overlay.addEventListener("click", closeDrawer);
+
+    btnLogin.addEventListener("click", loginOwner);
+    btnCancelLogin.addEventListener("click", closeLogin);
+    loginModal.addEventListener("click", (e)=> { if (e.target === loginModal) closeLogin(); });
+    ownerPass.addEventListener("keydown", (e)=> { if (e.key === "Enter") loginOwner(); });
+
+    /***************
+     * أدوات لوحة الأونر
+     ***************/
+    adminRun.addEventListener("click", () => { btnRun.click(); closeDrawer(); });
+    adminSave.addEventListener("click", () => {
+      saveCode(activeTab, editor.value);
+      setSaved();
+      showToast("تم الحفظ");
+    });
+
+    adminCopy.addEventListener("click", async () => {
+      const all = getAllCode();
+      const text = `<!-- HTML -->\n${all.html}\n\n/* CSS */\n${all.css}\n\n// JS\n${all.js}\n`;
+      try{
+        await navigator.clipboard.writeText(text);
+        showToast("تم النسخ");
+      }catch{
+        showToast("تعذر النسخ (صلاحيات المتصفح)");
+      }
+    });
+
+    adminExport.addEventListener("click", async () => {
+      const out = exportHtml();
+      try{
+        await navigator.clipboard.writeText(out);
+        showToast("تم نسخ HTML المصدّر");
+      }catch{
+        showToast("تعذر النسخ (صلاحيات المتصفح)");
+      }
+    });
+
+    adminDownload.addEventListener("click", () => {
+      const out = exportHtml();
+      const blob = new Blob([out], { type: "text/html;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "export.html";
+      a.click();
+      URL.revokeObjectURL(a.href);
+      showToast("تم تنزيل الملف");
+    });
+
+    adminReset.addEventListener("click", () => {
+      localStorage.setItem(LS.html, defaults.html);
+      localStorage.setItem(LS.css, defaults.css);
+      localStorage.setItem(LS.js, defaults.js);
+      switchTab(activeTab);
+      buildPreview();
+      showToast("تمت إعادة الضبط");
+    });
+
+    adminToggleEditor.addEventListener("click", () => {
+      editorWrap.classList.toggle("hidden");
+      showToast(editorWrap.classList.contains("hidden") ? "تم إخفاء المحرر" : "تم إظهار المحرر");
+    });
+
+    adminToggleLock.addEventListener("click", () => {
+      editor.readOnly = !editor.readOnly;
+      showToast(editor.readOnly ? "تم قفل التعديل" : "تم فتح التعديل");
+    });
+
+    optAutoRun.addEventListener("change", () => {
+      const s = loadSettings();
+      s.autoRun = optAutoRun.checked;
+      saveSettings(s);
+      showToast(optAutoRun.checked ? "تم تفعيل التشغيل التلقائي" : "تم إيقاف التشغيل التلقائي");
+    });
+
+    optWrap.addEventListener("change", () => {
+      const s = loadSettings();
+      s.wrap = optWrap.checked;
+      saveSettings(s);
+      applyWrap();
+      showToast(optWrap.checked ? "تم تفعيل لفّ السطور" : "تم إيقاف لفّ السطور");
+    });
+
+    accessMode.addEventListener("change", () => {
+      localStorage.setItem(LS.access, accessMode.value);
+      updateOwnerBadge();
+      showToast("تم حفظ وضع الوصول");
+    });
+
+    btnLogout.addEventListener("click", logoutOwner);
+
+    /***************
+     * Snippets events
+     ***************/
+    btnAddSnippet.addEventListener("click", () => {
+      const name = snipName.value.trim();
+      const type = snipType.value;
+      const code = snipCode.value.trim();
+      if (!name || !code){
+        showToast("اكتب اسم الاختصار والكود");
+        return;
+      }
+      const list = loadSnips();
+      list.unshift({ name, type, code, createdAt: Date.now() });
+      saveSnips(list);
+      snipName.value = "";
+      snipCode.value = "";
+      renderSnips();
+      showToast("تمت إضافة الاختصار");
+    });
+
+    /***************
+     * Shortcuts
+     ***************/
+    document.addEventListener("keydown", (e) => {
+      const isCtrl = e.ctrlKey || e.metaKey;
+
+      if (isCtrl && e.key === "Enter"){
+        e.preventDefault();
+        saveCode(activeTab, editor.value);
+        buildPreview();
+        showToast("تم التشغيل");
+      }
+
+      if (isCtrl && e.key.toLowerCase() === "s"){
+        e.preventDefault();
+        saveCode(activeTab, editor.value);
+        setSaved();
+        showToast("تم الحفظ");
+      }
+
+      if (isCtrl && e.shiftKey && e.key.toLowerCase() === "c"){
+        e.preventDefault();
+        adminCopy.click();
+      }
+
+      if (isCtrl && e.shiftKey && e.key.toLowerCase() === "r"){
+        e.preventDefault();
+        adminReset.click();
+      }
+
+      if (e.key === "Escape"){
+        // إغلاق اللوحة/المودال بسرعة
+        closeLogin();
+        closeDrawer();
+      }
+    });
+
+    /***************
+     * Init
+     ***************/
+    (function init(){
+      if (!localStorage.getItem(LS.html)) localStorage.setItem(LS.html, defaults.html);
+      if (!localStorage.getItem(LS.css)) localStorage.setItem(LS.css, defaults.css);
+      if (!localStorage.getItem(LS.js)) localStorage.setItem(LS.js, defaults.js);
+
+      applySettings();
+      switchTab("html");
+      buildPreview();
+      renderSnips();
+      updateOwnerBadge();
+      setSaved();
+    })();
+  </script>
 </body>
 </html>
