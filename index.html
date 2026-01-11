@@ -4,237 +4,128 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Dark Code Test</title>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
-
-  <link rel="stylesheet" href="styles.css" />
 </head>
 
 <body>
-  <!-- Topbar -->
   <header class="topbar">
     <div class="logo">DC</div>
     <div class="brand">
-      <div class="site-name">Dark Code Test</div>
-      <div class="sub">HTML • CSS • JS + معاينة مباشرة</div>
+      <div class="name">Dark Code Test</div>
+      <div class="sub">محرر HTML/CSS/JS + معاينة مباشرة</div>
     </div>
 
     <div class="spacer"></div>
 
-    <div class="actions">
-      <button class="btn primary" id="btnRun" title="تشغيل (Ctrl + Enter)">تشغيل</button>
+    <div class="toolbar">
+      <button class="btn primary" id="runBtn" title="تشغيل (Ctrl+Enter)">تشغيل</button>
 
-      <button class="btn" id="btnImportCode" title="استيراد ملف للكود (Ctrl + O)">استيراد ملف للكود</button>
-      <button class="btn" id="btnAddAsset" title="إضافة ملفات للمشروع (Ctrl + Shift + O)">إضافة ملف للمشروع</button>
+      <button class="btn" id="saveBtn" title="حفظ (Ctrl+S)">حفظ</button>
+      <button class="btn" id="exportBtn" title="تصدير مشروع JSON">تصدير</button>
+      <button class="btn" id="importProjectBtn" title="استيراد مشروع JSON">استيراد مشروع</button>
 
-      <button class="btn" id="btnExportProject" title="تصدير المشروع (Ctrl + S)">تصدير مشروع</button>
-      <button class="btn" id="btnImportProject" title="استيراد مشروع JSON">استيراد مشروع</button>
+      <button class="btn" id="importCodeBtn" title="استيراد ملف كود (Ctrl+O)">استيراد كود</button>
+      <button class="btn" id="addAssetBtn" title="إضافة ملفات للمشروع (Ctrl+Shift+O)">ملفات +</button>
 
-      <button class="btn danger" id="btnReset" title="مسح كل شيء">مسح الكل</button>
-      <button class="btn help" id="btnHelp" title="الأدوات والاختصارات (F1)">؟</button>
+      <button class="btn danger" id="resetBtn" title="مسح كل شيء">مسح</button>
+      <button class="btn help" id="helpBtn" title="مساعدة (F1 أو Ctrl+K)">؟</button>
     </div>
   </header>
 
-  <main class="main">
-    <!-- Editor -->
-    <section class="panel">
-      <div class="panel-head">
-        <h2>المحرر</h2>
-        <div class="tabs" role="tablist">
-          <button class="tab active" data-tab="html" role="tab" aria-selected="true">HTML</button>
-          <button class="tab" data-tab="css" role="tab" aria-selected="false">CSS</button>
-          <button class="tab" data-tab="js" role="tab" aria-selected="false">JS</button>
-          <button class="tab" data-tab="files" role="tab" aria-selected="false">الملفات</button>
+  <main class="layout">
+    <section class="left">
+      <div class="tabs">
+        <button class="tab active" data-tab="html">HTML</button>
+        <button class="tab" data-tab="css">CSS</button>
+        <button class="tab" data-tab="js">JS</button>
+        <button class="tab" data-tab="files">Files</button>
+      </div>
+
+      <div class="editorWrap">
+        <textarea id="htmlEditor" class="editor" spellcheck="false"></textarea>
+        <textarea id="cssEditor" class="editor" spellcheck="false" hidden></textarea>
+        <textarea id="jsEditor" class="editor" spellcheck="false" hidden></textarea>
+
+        <div id="filesPanel" class="filesPanel" hidden>
+          <div class="filesHead">
+            <div class="filesTitle">ملفات المشروع (Assets)</div>
+            <div class="filesNote">CSS/JS تنحقن داخل المعاينة تلقائيًا</div>
+          </div>
+          <div id="filesList" class="filesList"></div>
         </div>
       </div>
 
-      <div class="panel-body">
-        <textarea id="codeArea" spellcheck="false"></textarea>
-
-        <div id="filesView" class="files-view" hidden>
-          <div class="status-line">
-            <span>الملفات الإضافية تنحقن داخل المعاينة تلقائيًا.</span>
-            <span class="sep">•</span>
-            <span>CSS ⇦ style / JS ⇦ script</span>
-          </div>
-
-          <div class="files-wrap" id="filesList"></div>
-
-          <div class="status-line">
-            <span id="filesCount">0 ملفات</span>
-            <span class="sep">•</span>
-            <span>الحفظ تلقائي</span>
-          </div>
-        </div>
-
-        <div class="status-line">
-          <span id="statusText">جاهز</span>
-          <span class="sep">•</span>
+      <div class="statusbar">
+        <div class="status" id="statusText">جاهز</div>
+        <div class="statusRight">
           <label class="check">
             <input type="checkbox" id="autoRun" checked />
             <span>تحديث مباشر</span>
           </label>
-          <span class="sep">•</span>
-          <span>مساعدة: F1</span>
+          <span class="dotSep">•</span>
+          <span class="hint">مساعدة: F1 أو Ctrl+K</span>
         </div>
       </div>
     </section>
 
-    <!-- Preview -->
-    <section class="panel">
-      <div class="panel-head">
-        <h2>المعاينة (يمين)</h2>
-        <div class="panel-hint">Tajawal داخل المعاينة</div>
+    <div class="splitter" id="splitter" title="اسحب للتوسيع"></div>
+
+    <section class="right">
+      <div class="previewHead">
+        <div class="previewTitle">المعاينة</div>
+        <div class="previewHint">Tajawal + Console داخل المعاينة</div>
       </div>
-      <div class="preview-body">
-        <iframe id="result" sandbox="allow-scripts"></iframe>
-      </div>
+      <iframe id="preview" sandbox="allow-scripts allow-modals" referrerpolicy="no-referrer"></iframe>
     </section>
   </main>
 
-  <!-- Hidden file inputs -->
-  <input id="fileInputCode" type="file" hidden accept=".html,.htm,.css,.js,.txt" />
-  <input id="fileInputAsset" type="file" hidden multiple accept=".js,.css,.txt,.json" />
-  <input id="fileInputProject" type="file" hidden accept=".json" />
+  <!-- Inputs -->
+  <input id="importCodeInput" type="file" hidden accept=".html,.htm,.css,.js,.txt">
+  <input id="assetsInput" type="file" hidden multiple accept=".css,.js,.txt,.json">
+  <input id="importProjectInput" type="file" hidden accept=".json">
 
   <!-- Help Modal -->
-  <div class="backdrop" id="helpBackdrop" aria-hidden="true">
-    <div class="modal" role="dialog" aria-modal="true" aria-label="الأدوات السريعة والاختصارات">
-      <div class="modal-head">
-        <div class="modal-title">
-          <strong>أدوات سريعة + اختصارات + Snippets</strong>
-          <span>إغلاق: Esc • تشغيل: Ctrl+Enter</span>
+  <div class="modalBackdrop" id="helpBackdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modalHead">
+        <div>
+          <div class="modalTitle">الاختصارات + الأدوات السريعة</div>
+          <div class="modalSub">إغلاق: Esc — تشغيل: Ctrl+Enter — بديل المساعدة: Ctrl+K</div>
         </div>
-        <button class="btn" id="btnCloseHelp" title="إغلاق (Esc)">إغلاق</button>
+        <button class="btn" id="closeHelpBtn">إغلاق</button>
       </div>
 
-      <div class="modal-body">
+      <div class="modalBody">
         <div class="grid2">
           <div class="card">
-            <h3>اختصارات</h3>
-            <div class="list">
-              <div class="row">
-                <div class="desc">تشغيل المعاينة</div>
-                <div class="keys"><span class="kbd">Ctrl</span><span class="kbd">Enter</span></div>
-              </div>
-              <div class="row">
-                <div class="desc">تصدير مشروع</div>
-                <div class="keys"><span class="kbd">Ctrl</span><span class="kbd">S</span></div>
-              </div>
-              <div class="row">
-                <div class="desc">استيراد ملف للكود</div>
-                <div class="keys"><span class="kbd">Ctrl</span><span class="kbd">O</span></div>
-              </div>
-              <div class="row">
-                <div class="desc">إضافة ملفات للمشروع</div>
-                <div class="keys"><span class="kbd">Ctrl</span><span class="kbd">Shift</span><span class="kbd">O</span></div>
-              </div>
-
-              <div class="row">
-                <div class="desc">تعليق/فك تعليق</div>
-                <div class="keys"><span class="kbd">Ctrl</span><span class="kbd">/</span></div>
-              </div>
-              <div class="row">
-                <div class="desc">تكرار</div>
-                <div class="keys"><span class="kbd">Ctrl</span><span class="kbd">D</span></div>
-              </div>
-              <div class="row">
-                <div class="desc">حذف السطر</div>
-                <div class="keys"><span class="kbd">Ctrl</span><span class="kbd">L</span></div>
-              </div>
-              <div class="row">
-                <div class="desc">نقل السطر</div>
-                <div class="keys">
-                  <span class="kbd">Alt</span><span class="kbd">↑</span>
-                  <span class="kbd">Alt</span><span class="kbd">↓</span>
-                </div>
-              </div>
-              <div class="row">
-                <div class="desc">console.log للتحديد</div>
-                <div class="keys"><span class="kbd">Ctrl</span><span class="kbd">Shift</span><span class="kbd">L</span></div>
-              </div>
-              <div class="row">
-                <div class="desc">فتح/إغلاق المساعدة</div>
-                <div class="keys"><span class="kbd">F1</span> <span class="kbd">Esc</span></div>
-              </div>
+            <div class="cardTitle">اختصارات</div>
+            <div class="rows">
+              <div class="row"><span>تشغيل</span><span class="kbd">Ctrl</span><span class="kbd">Enter</span></div>
+              <div class="row"><span>حفظ</span><span class="kbd">Ctrl</span><span class="kbd">S</span></div>
+              <div class="row"><span>استيراد كود</span><span class="kbd">Ctrl</span><span class="kbd">O</span></div>
+              <div class="row"><span>إضافة ملفات</span><span class="kbd">Ctrl</span><span class="kbd">Shift</span><span class="kbd">O</span></div>
+              <div class="row"><span>مساعدة</span><span class="kbd">F1</span> <span class="kbd">Ctrl</span><span class="kbd">K</span></div>
+              <div class="row"><span>إغلاق المساعدة</span><span class="kbd">Esc</span></div>
             </div>
           </div>
 
           <div class="card">
-            <h3>أدوات تحرير سريعة</h3>
-            <p class="muted">تعمل على السطر الحالي أو التحديد داخل المحرر.</p>
-            <div class="chipbar">
-              <button class="pill2" data-tool="toggle-comment">تعليق/فك تعليق</button>
-              <button class="pill2" data-tool="duplicate">تكرار</button>
-              <button class="pill2" data-tool="delete-line">حذف السطر</button>
-              <button class="pill2" data-tool="move-up">نقل لأعلى</button>
-              <button class="pill2" data-tool="move-down">نقل لأسفل</button>
-
-              <button class="pill2" data-tool="wrap-div">لف بـ div</button>
-              <button class="pill2" data-tool="wrap-section">لف بـ section</button>
-              <button class="pill2" data-tool="wrap-span">لف بـ span</button>
-              <button class="pill2" data-tool="wrap-a">لف بـ a</button>
-              <button class="pill2" data-tool="wrap-button">لف بـ button</button>
-
-              <button class="pill2" data-tool="log-selection">console.log</button>
-              <button class="pill2" data-tool="make-fn">إنشاء function</button>
+            <div class="cardTitle">ملاحظات مهمة</div>
+            <div class="p">
+              - بعض المتصفحات تمنع F1 لأنها للمساعدة الافتراضية، لذلك وفرنا Ctrl+K.<br>
+              - لو كنت فاتح الموقع داخل iframe داخل موقع ثاني: “اختيار الملفات” ممكن ينمنع حسب إعدادات الموقع.
             </div>
           </div>
         </div>
 
         <div class="card">
-          <h3>Snippets سريعة</h3>
-          <p class="muted">اضغط لإدخال كود جاهز داخل التبويب الحالي (HTML/CSS/JS) عند المؤشر.</p>
-
-          <div class="section-title">HTML</div>
-          <div class="chipbar">
-            <button class="pill" data-snippet="html-basic">هيكل صفحة</button>
-            <button class="pill" data-snippet="html-card">Card</button>
-            <button class="pill" data-snippet="html-navbar">Navbar</button>
-          </div>
-
-          <div class="section-title">CSS</div>
-          <div class="chipbar">
-            <button class="pill" data-snippet="css-center">توسيط</button>
-            <button class="pill" data-snippet="css-dark">Dark</button>
-            <button class="pill" data-snippet="css-card">Card Style</button>
-          </div>
-
-          <div class="section-title">JS</div>
-          <div class="chipbar">
-            <button class="pill" data-snippet="js-click">زر + حدث</button>
-            <button class="pill" data-snippet="js-fetch">Fetch JSON</button>
+          <div class="cardTitle">أدوات ملفات (Assets)</div>
+          <div class="p">
+            من تبويب Files تقدر تشوف الملفات وتعدلها/تحذفها. ملفات CSS و JS تشتغل داخل المعاينة مباشرة.
           </div>
         </div>
-
-        <div class="card">
-          <h3>تعليم سريع</h3>
-          <div class="list">
-            <div class="row">
-              <div class="desc"><strong>HTML</strong> لبناء عناصر الصفحة (h1, div, button).</div>
-              <div class="keys"><span class="kbd">HTML</span></div>
-            </div>
-            <div class="row">
-              <div class="desc"><strong>CSS</strong> لتنسيق الشكل (لون/خط/مسافات).</div>
-              <div class="keys"><span class="kbd">CSS</span></div>
-            </div>
-            <div class="row">
-              <div class="desc"><strong>JS</strong> للتفاعل (أحداث/منطق/جلب بيانات).</div>
-              <div class="keys"><span class="kbd">JS</span></div>
-            </div>
-            <div class="row">
-              <div class="desc">“الملفات” لإضافة سكربتات/ستايلات إضافية للمشروع.</div>
-              <div class="keys"><span class="kbd">Files</span></div>
-            </div>
-          </div>
-        </div>
-
       </div>
     </div>
   </div>
-
-  <script src="app.js"></script>
 </body>
 </html>
