@@ -173,7 +173,7 @@ console.log("Hello from JS");
 
 <script>
 /* ===== كلمة مرور الأونر ===== */
-const OWNER_PASSWORD = "9732"; // غيرها فوراً
+const OWNER_PASSWORD = "123456"; // غيرها فوراً
 
 const adminIcon  = document.getElementById("adminIcon");
 const ownerLogin = document.getElementById("ownerLogin");
@@ -249,57 +249,6 @@ ${html}
 }
 
 textareas.forEach(el => el.addEventListener("input", runCode));
-runCode();
-</script>
-
-</body>
-</html>
-  <textarea id="css">
-body {
-  font-family: Arial;
-  background: #f5f5f5;
-}
-h1 {
-  color: #333;
-}
-  </textarea>
-
-  <label>JavaScript</label>
-  <textarea id="js">
-console.log("Hello from JS");
-  </textarea>
-</div>
-
-<iframe id="result"></iframe>
-
-<script>
-function runCode() {
-  const html = document.getElementById("html").value;
-  const css = document.getElementById("css").value;
-  const js = document.getElementById("js").value;
-
-  const output = `
-<!DOCTYPE html>
-<html>
-<head>
-<style>${css}</style>
-</head>
-<body>
-${html}
-<script>${js}<\/script>
-</body>
-</html>
-  `;
-
-  document.getElementById("result").srcdoc = output;
-}
-
-/* تشغيل مباشر عند الكتابة */
-document.querySelectorAll("textarea").forEach(el => {
-  el.addEventListener("input", runCode);
-});
-
-/* تشغيل أول مرة */
 runCode();
 </script>
 
