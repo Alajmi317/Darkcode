@@ -9,10 +9,11 @@
   :root{
     --bg:#0b0f14; --panel:#0f1621; --panel2:#0c121b;
     --text:#e6eefc; --muted:#9bb0d0; --border:rgba(255,255,255,.10);
-    --accent:#3b82f6; --accent2:#8b5dff;
+    --accent:#3b82f6; --accent2:#8b5dff; --danger:#ff5d7a;
     --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     --sans: system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans Arabic", sans-serif;
     --radius:14px;
+    --shadow: 0 18px 50px rgba(0,0,0,.55);
   }
 
   *{box-sizing:border-box}
@@ -55,7 +56,7 @@
   .site-name{font-weight:800; letter-spacing:.2px}
   .sub{color:var(--muted); font-size:12px}
   .spacer{flex:1}
-  .actions{display:flex; gap:8px; flex-wrap:wrap}
+  .actions{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
   .btn{
     border:1px solid var(--border);
     background: rgba(255,255,255,.04);
@@ -65,10 +66,16 @@
     cursor:pointer;
     font-size:12px;
     transition:.15s ease;
+    user-select:none;
   }
   .btn:hover{transform: translateY(-1px); background: rgba(255,255,255,.07);}
   .btn.primary{border-color: rgba(59,130,246,.5); background: rgba(59,130,246,.18);}
   .btn.danger{border-color: rgba(255,93,122,.35); background: rgba(255,93,122,.12);}
+  .btn.help{
+    width:38px; height:38px;
+    display:inline-flex; align-items:center; justify-content:center;
+    font-weight:900;
+  }
 
   /* Layout */
   .main{
@@ -112,6 +119,7 @@
     cursor:pointer;
     font-size:12px;
     transition:.15s ease;
+    user-select:none;
   }
   .tab.active{
     color:var(--text);
@@ -140,11 +148,7 @@
   }
 
   /* Files list */
-  .files-wrap{
-    display:grid;
-    grid-template-columns: 1fr;
-    gap:8px;
-  }
+  .files-wrap{display:grid; grid-template-columns: 1fr; gap:8px;}
   .file-item{
     border:1px solid var(--border);
     background: rgba(0,0,0,.18);
@@ -159,20 +163,11 @@
   .file-name{font-size:12px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:320px;}
   .file-type{font-size:11px; color:var(--muted)}
   .file-actions{display:flex; gap:8px; flex:0 0 auto;}
-  .mini{
-    padding:7px 9px;
-    border-radius:10px;
-    font-size:11px;
-  }
+  .mini{padding:7px 9px; border-radius:10px; font-size:11px;}
 
   /* Preview */
   .preview-body{padding:0; min-height:0; flex:1;}
-  iframe{
-    width:100%;
-    height:100%;
-    border:0;
-    background:white;
-  }
+  iframe{width:100%; height:100%; border:0; background:white;}
 
   /* Footer/status */
   .status{
@@ -186,8 +181,113 @@
   }
   .sep{opacity:.5}
 
+  /* Modal (Help) */
+  .backdrop{
+    position:fixed;
+    inset:0;
+    background: rgba(0,0,0,.55);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:16px;
+    z-index:9999;
+  }
+  .backdrop.open{display:flex;}
+  .modal{
+    width:min(920px, 100%);
+    max-height: min(82vh, 820px);
+    overflow:hidden;
+    border:1px solid var(--border);
+    background: rgba(15,22,33,.92);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(12px);
+    display:flex;
+    flex-direction:column;
+  }
+  .modal-head{
+    padding:12px 14px;
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    background: rgba(0,0,0,.18);
+  }
+  .modal-title{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+  .modal-title strong{font-size:13px}
+  .modal-title span{font-size:12px; color:var(--muted)}
+  .modal-body{
+    padding:12px 14px;
+    overflow:auto;
+    display:grid;
+    gap:14px;
+  }
+  .cards{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:12px;
+  }
+  .card{
+    border:1px solid var(--border);
+    background: rgba(0,0,0,.18);
+    border-radius: 16px;
+    padding:12px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .card h3{margin:0; font-size:13px}
+  .card p{margin:0; color:var(--muted); font-size:12px; line-height:1.6}
+  .kbd{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:2px 8px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background: rgba(255,255,255,.04);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    margin: 0 3px;
+    white-space:nowrap;
+  }
+  .list{
+    display:grid;
+    gap:8px;
+  }
+  .row{
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+    justify-content:space-between;
+    border:1px solid var(--border);
+    background: rgba(255,255,255,.03);
+    border-radius:14px;
+    padding:10px;
+  }
+  .row .desc{color:var(--muted); font-size:12px; line-height:1.5; flex:1;}
+  .row .keys{display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-start; min-width:220px;}
+  .pill{
+    display:inline-flex;
+    padding:6px 10px;
+    border-radius:999px;
+    border:1px solid var(--border);
+    background: rgba(59,130,246,.10);
+    cursor:pointer;
+    font-size:12px;
+    user-select:none;
+  }
+  .pill:hover{background: rgba(59,130,246,.16);}
+
   @media (max-width: 980px){
     .main{grid-template-columns: 1fr;}
+    .cards{grid-template-columns: 1fr;}
   }
 </style>
 </head>
@@ -197,16 +297,19 @@
     <div class="logo">DC</div>
     <div>
       <div class="site-name">Dark Code</div>
-      <div class="sub">محرر أكواد + معاينة مباشرة + ملفات إضافية</div>
+      <div class="sub">محرر أكواد + معاينة مباشرة + ملفات + اختصارات</div>
     </div>
+
     <div class="spacer"></div>
+
     <div class="actions">
-      <button class="btn primary" id="btnRun">تشغيل</button>
-      <button class="btn" id="btnImportCode">استيراد ملف للكود</button>
-      <button class="btn" id="btnAddAsset">إضافة ملف للمشروع</button>
-      <button class="btn" id="btnExportProject">تصدير مشروع</button>
-      <button class="btn" id="btnImportProject">استيراد مشروع</button>
-      <button class="btn danger" id="btnReset">مسح الكل</button>
+      <button class="btn primary" id="btnRun" title="تشغيل (Ctrl + Enter)">تشغيل</button>
+      <button class="btn" id="btnImportCode" title="استيراد ملف HTML/CSS/JS (Ctrl + O)">استيراد ملف للكود</button>
+      <button class="btn" id="btnAddAsset" title="إضافة ملفات للمشروع (Ctrl + Shift + O)">إضافة ملف للمشروع</button>
+      <button class="btn" id="btnExportProject" title="تصدير المشروع (Ctrl + S)">تصدير مشروع</button>
+      <button class="btn" id="btnImportProject" title="استيراد مشروع JSON">استيراد مشروع</button>
+      <button class="btn danger" id="btnReset" title="مسح كل شيء">مسح الكل</button>
+      <button class="btn help" id="btnHelp" title="الاختصارات والمساعدة (F1)">؟</button>
     </div>
   </div>
 
@@ -249,7 +352,7 @@
             <span>تحديث مباشر</span>
           </label>
           <span class="sep">•</span>
-          <span>الحفظ: تلقائي</span>
+          <span title="اختصار سريع للمساعدة: F1">مساعدة: F1</span>
         </div>
       </div>
     </section>
@@ -273,11 +376,118 @@
   <input id="fileInputAsset" type="file" style="display:none" multiple accept=".js,.css,.txt,.json" />
   <input id="fileInputProject" type="file" style="display:none" accept=".json" />
 
+  <!-- Help Modal -->
+  <div class="backdrop" id="helpBackdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="مساعدة واختصارات">
+      <div class="modal-head">
+        <div class="modal-title">
+          <strong>قائمة الاختصارات + أدوات تسهيل البرمجة</strong>
+          <span>استخدم الاختصارات لتسريع شغلك، أو اضغط على الأدوات لإضافة أكواد جاهزة.</span>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button class="btn" id="btnCloseHelp" title="إغلاق (Esc)">إغلاق</button>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <div class="cards">
+          <div class="card">
+            <h3>اختصارات أساسية</h3>
+            <div class="list">
+              <div class="row">
+                <div class="desc">تشغيل/تحديث المعاينة</div>
+                <div class="keys">
+                  <span class="kbd">Ctrl</span><span class="kbd">Enter</span>
+                </div>
+              </div>
+              <div class="row">
+                <div class="desc">تصدير المشروع (JSON)</div>
+                <div class="keys">
+                  <span class="kbd">Ctrl</span><span class="kbd">S</span>
+                </div>
+              </div>
+              <div class="row">
+                <div class="desc">استيراد ملف للكود (HTML/CSS/JS)</div>
+                <div class="keys">
+                  <span class="kbd">Ctrl</span><span class="kbd">O</span>
+                </div>
+              </div>
+              <div class="row">
+                <div class="desc">إضافة ملفات للمشروع (Assets)</div>
+                <div class="keys">
+                  <span class="kbd">Ctrl</span><span class="kbd">Shift</span><span class="kbd">O</span>
+                </div>
+              </div>
+              <div class="row">
+                <div class="desc">فتح المساعدة</div>
+                <div class="keys">
+                  <span class="kbd">F1</span>
+                </div>
+              </div>
+              <div class="row">
+                <div class="desc">إغلاق المساعدة</div>
+                <div class="keys">
+                  <span class="kbd">Esc</span>
+                </div>
+              </div>
+            </div>
+            <p>ملاحظة: الحفظ تلقائي دائمًا، فلا تحتاج زر حفظ للكتابة.</p>
+          </div>
+
+          <div class="card">
+            <h3>أدوات سريعة (Snippets)</h3>
+            <p>اضغط زر لإضافة كود جاهز داخل التبويب الحالي (HTML/CSS/JS). تقدر بعدها تعدله.</p>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+              <span class="pill" data-snippet="html-basic">HTML: هيكل بسيط</span>
+              <span class="pill" data-snippet="html-card">HTML: بطاقة (Card)</span>
+              <span class="pill" data-snippet="css-center">CSS: توسيط + عرض جميل</span>
+              <span class="pill" data-snippet="css-dark">CSS: خلفية داكنة</span>
+              <span class="pill" data-snippet="js-click">JS: حدث زر</span>
+              <span class="pill" data-snippet="js-fetch">JS: طلب بيانات (fetch)</span>
+            </div>
+            <p>إذا كنت على تبويب “الملفات”، ارجع لـ HTML/CSS/JS ثم استخدم الأدوات.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>تعليم سريع</h3>
+          <div class="list">
+            <div class="row">
+              <div class="desc">
+                <strong>HTML</strong> يبني عناصر الصفحة (عناوين، أزرار، أقسام). مثال: <span class="kbd">&lt;h1&gt;</span>
+              </div>
+              <div class="keys"><span class="kbd">تبويب HTML</span></div>
+            </div>
+            <div class="row">
+              <div class="desc">
+                <strong>CSS</strong> ينسّق الشكل (ألوان، خطوط، مسافات). مثال: <span class="kbd">color</span>
+              </div>
+              <div class="keys"><span class="kbd">تبويب CSS</span></div>
+            </div>
+            <div class="row">
+              <div class="desc">
+                <strong>JS</strong> يضيف تفاعل (ضغط زر، حسابات، جلب بيانات). مثال: <span class="kbd">addEventListener</span>
+              </div>
+              <div class="keys"><span class="kbd">تبويب JS</span></div>
+            </div>
+            <div class="row">
+              <div class="desc">
+                لإضافة سكربتات/ستايلات كثيرة: استخدم <strong>إضافة ملف للمشروع</strong> (CSS/JS) وستعمل تلقائيًا داخل المعاينة.
+              </div>
+              <div class="keys"><span class="kbd">الملفات</span></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
 <script>
 /* =========================
    Storage + State
 ========================= */
-const STORAGE_KEY = "darkcode.project.v2";
+const STORAGE_KEY = "darkcode.project.v3";
 
 const codeArea = document.getElementById("codeArea");
 const resultFrame = document.getElementById("result");
@@ -293,6 +503,10 @@ const fileInputAsset = document.getElementById("fileInputAsset");
 const fileInputProject = document.getElementById("fileInputProject");
 
 const tabs = Array.from(document.querySelectorAll(".tab"));
+
+const helpBackdrop = document.getElementById("helpBackdrop");
+const btnHelp = document.getElementById("btnHelp");
+const btnCloseHelp = document.getElementById("btnCloseHelp");
 
 let activeTab = "html";
 
@@ -370,15 +584,20 @@ function setActiveTab(tab){
    Preview build (inject assets)
 ========================= */
 function buildAssetsInjection(){
-  // JS assets appended as scripts, CSS assets appended as styles
-  const cssAssets = state.assets.filter(a => a.type === "css").map(a => a.content).join("\n\n/* ---- asset ---- */\n\n");
-  const jsAssets  = state.assets.filter(a => a.type === "js").map(a => a.content).join("\n\n// ---- asset ----\n\n");
+  const cssAssets = state.assets
+    .filter(a => a.type === "css")
+    .map(a => a.content)
+    .join("\n\n/* ---- asset ---- */\n\n");
+
+  const jsAssets  = state.assets
+    .filter(a => a.type === "js")
+    .map(a => a.content)
+    .join("\n\n// ---- asset ----\n\n");
 
   return { cssAssets, jsAssets };
 }
 
 function run(){
-  // always save before run
   commitEditorToState();
 
   const { cssAssets, jsAssets } = buildAssetsInjection();
@@ -462,12 +681,15 @@ function renderFiles(){
 
     const meta = document.createElement("div");
     meta.className = "file-meta";
+
     const name = document.createElement("div");
     name.className = "file-name";
     name.textContent = asset.name;
+
     const type = document.createElement("div");
     type.className = "file-type";
     type.textContent = `النوع: ${asset.type.toUpperCase()} • يشتغل داخل المعاينة: ${asset.type === "js" || asset.type === "css" ? "نعم" : "لا"}`;
+
     meta.appendChild(name);
     meta.appendChild(type);
 
@@ -489,7 +711,6 @@ function renderFiles(){
 
     row.appendChild(meta);
     row.appendChild(acts);
-
     filesList.appendChild(row);
   });
 }
@@ -506,8 +727,6 @@ function openAssetEditor(id){
   const asset = state.assets.find(a => a.id === id);
   if(!asset) return;
 
-  // Simple prompt-based editor to keep it single-file + lightweight
-  // If you want, I can upgrade it لواجهة تحرير داخل الصفحة.
   const newContent = prompt(
     `تعديل محتوى الملف: ${asset.name}\n(انسخ/الصق وعدّل ثم OK)\nملاحظة: للمحتوى الطويل جدًا يفضل تصدير/استيراد مشروع.`,
     asset.content
@@ -531,7 +750,6 @@ async function importCodeFile(file){
   const text = await readFileText(file);
   const type = extToType(file.name);
 
-  // If file is html/css/js: load into that tab.
   if(type === "js" || type === "css"){
     state[type] = text;
     save();
@@ -549,7 +767,6 @@ async function importCodeFile(file){
     return;
   }
 
-  // txt: ask where to put it
   const where = prompt("الملف TXT. تبيه يروح وين؟ اكتب: html أو css أو js", "html");
   const w = (where || "html").toLowerCase().trim();
   if(["html","css","js"].includes(w)){
@@ -572,7 +789,6 @@ async function addAssetFiles(fileList){
     const type = extToType(f.name);
     const content = await readFileText(f);
 
-    // for json assets: keep as text (won't auto-run), user can use it in JS via copy/paste if needed
     state.assets.push({
       id: uid(),
       name: f.name,
@@ -629,7 +845,116 @@ async function importProjectFile(file){
 }
 
 /* =========================
-   UI events
+   Help modal
+========================= */
+function openHelp(){
+  helpBackdrop.classList.add("open");
+  helpBackdrop.setAttribute("aria-hidden","false");
+  setStatus("تم فتح المساعدة");
+}
+function closeHelp(){
+  helpBackdrop.classList.remove("open");
+  helpBackdrop.setAttribute("aria-hidden","true");
+  setStatus("تم إغلاق المساعدة");
+}
+btnHelp.addEventListener("click", openHelp);
+btnCloseHelp.addEventListener("click", closeHelp);
+helpBackdrop.addEventListener("click", (e)=>{
+  if(e.target === helpBackdrop) closeHelp();
+});
+
+/* =========================
+   Snippets
+========================= */
+const SNIPPETS = {
+  "html-basic": `<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>صفحة</title>
+</head>
+<body>
+  <h1>عنوان الصفحة</h1>
+  <p>نص بسيط</p>
+</body>
+</html>`,
+  "html-card": `<div class="card">
+  <h2>بطاقة</h2>
+  <p>هذا مثال بطاقة بسيطة.</p>
+  <button id="btn">زر</button>
+</div>`,
+  "css-center": `body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+.card{
+  width:min(520px, 100%);
+  border:1px solid rgba(0,0,0,.12);
+  border-radius:16px;
+  padding:16px;
+  background:white;
+}`,
+  "css-dark": `body{
+  background:#0b1220;
+  color:#e5e7eb;
+}
+a{color:#93c5fd}
+button{
+  border:1px solid rgba(255,255,255,.14);
+  background: rgba(59,130,246,.18);
+  color:#fff;
+  padding:10px 12px;
+  border-radius:12px;
+  cursor:pointer;
+}`,
+  "js-click": `document.getElementById("btn")?.addEventListener("click", ()=>{
+  alert("تم الضغط!");
+});`,
+  "js-fetch": `async function load(){
+  const res = await fetch("https://jsonplaceholder.typicode.com/todos/1");
+  const data = await res.json();
+  console.log(data);
+}
+load();`
+};
+
+function insertSnippet(snippetKey){
+  if(activeTab === "files"){
+    setStatus("اختر تبويب HTML/CSS/JS أولاً");
+    return;
+  }
+  const text = SNIPPETS[snippetKey];
+  if(!text) return;
+
+  // Insert at cursor (or append if no focus)
+  const start = codeArea.selectionStart ?? codeArea.value.length;
+  const end = codeArea.selectionEnd ?? codeArea.value.length;
+
+  const before = codeArea.value.slice(0, start);
+  const after = codeArea.value.slice(end);
+
+  const insert = (before && !before.endsWith("\n")) ? "\n\n" + text : text;
+  const final = before + insert + "\n\n" + after;
+
+  codeArea.value = final;
+  commitEditorToState();
+  scheduleRun();
+  setStatus("تم إدخال كود جاهز");
+}
+
+document.querySelectorAll("[data-snippet]").forEach(el=>{
+  el.addEventListener("click", ()=>{
+    const key = el.getAttribute("data-snippet");
+    insertSnippet(key);
+  });
+});
+
+/* =========================
+   UI events (buttons)
 ========================= */
 document.getElementById("btnRun").addEventListener("click", run);
 
@@ -679,12 +1004,69 @@ tabs.forEach(btn=>{
 });
 
 codeArea.addEventListener("input", ()=>{
-  // update state for current tab + run if enabled
   commitEditorToState();
   scheduleRun();
 });
-
 codeArea.addEventListener("blur", ()=> commitEditorToState());
+
+/* =========================
+   Keyboard Shortcuts
+   - Ctrl+Enter: Run
+   - Ctrl+S: Export project
+   - Ctrl+O: Import code file
+   - Ctrl+Shift+O: Add assets
+   - F1: Help
+   - Esc: Close help
+========================= */
+window.addEventListener("keydown", (e)=>{
+  const key = (e.key || "").toLowerCase();
+
+  // F1 help
+  if(e.key === "F1"){
+    e.preventDefault();
+    openHelp();
+    return;
+  }
+
+  // Esc close help
+  if(e.key === "Escape" && helpBackdrop.classList.contains("open")){
+    e.preventDefault();
+    closeHelp();
+    return;
+  }
+
+  // Ctrl shortcuts
+  if(e.ctrlKey && !e.altKey){
+    // Ctrl+Enter run
+    if(e.key === "Enter"){
+      e.preventDefault();
+      run();
+      return;
+    }
+    // Ctrl+S export project
+    if(key === "s"){
+      e.preventDefault();
+      exportProject();
+      return;
+    }
+    // Ctrl+O import code file
+    if(key === "o" && !e.shiftKey){
+      e.preventDefault();
+      fileInputCode.value = "";
+      fileInputCode.click();
+      setStatus("اختر ملفًا للاستيراد");
+      return;
+    }
+    // Ctrl+Shift+O add assets
+    if(key === "o" && e.shiftKey){
+      e.preventDefault();
+      fileInputAsset.value = "";
+      fileInputAsset.click();
+      setStatus("اختر ملفات للمشروع");
+      return;
+    }
+  }
+});
 
 /* =========================
    Init
