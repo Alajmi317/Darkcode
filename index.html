@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>CodePen Like Editor</title>
+<title>CodePen Like Editor + Owner Panel</title>
 
 <style>
 body {
@@ -12,7 +12,7 @@ body {
   height: 100vh;
 }
 
-/* المحرر */
+/* ===== المحرر ===== */
 .editor {
   width: 50%;
   background: #1e1e1e;
@@ -24,10 +24,8 @@ label {
   background: #333;
   color: #fff;
   padding: 6px 10px;
-  font-size: 14px;
 }
 
-/* حقول الكتابة */
 textarea {
   flex: 1;
   background: #252526;
@@ -40,18 +38,113 @@ textarea {
   border-bottom: 1px solid #333;
 }
 
-/* المعاينة */
+/* ===== المعاينة ===== */
 iframe {
   width: 50%;
   border: none;
   background: white;
 }
+
+/* ===== زر الأونر ===== */
+#adminIcon{
+  position:fixed;
+  top:15px;
+  right:15px;
+  width:42px;
+  height:42px;
+  background:#222;
+  color:#fff;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  z-index:9999;
+  font-size:20px;
+}
+#adminIcon:hover{background:#444}
+
+/* ===== Overlay ===== */
+.admin-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:10000;
+}
+
+/* ===== صندوق ===== */
+.admin-box{
+  background:#1e1e1e;
+  padding:20px;
+  border-radius:14px;
+  width:320px;
+  color:#fff;
+  text-align:center;
+}
+.admin-box input{
+  width:100%;
+  padding:10px;
+  margin:10px 0;
+  border:none;
+  border-radius:8px;
+}
+.admin-box button{
+  width:100%;
+  padding:10px;
+  margin-top:8px;
+  border:none;
+  border-radius:8px;
+  background:#3a6cff;
+  color:white;
+  cursor:pointer;
+  font-size:14px;
+}
+.admin-box button.danger{background:#a33}
+#loginError{
+  color:#ff6a6a;
+  font-size:13px;
+}
+
+/* إخفاء */
+.hidden{display:none}
 </style>
 </head>
 
 <body>
 
-<div class="editor">
+<!-- زر لوحة التحكم -->
+<div id="adminIcon">⚙️</div>
+
+<!-- تسجيل دخول الأونر -->
+<div id="ownerLogin" class="admin-overlay">
+  <div class="admin-box">
+    <h3>دخول الأونر</h3>
+    <input type="password" id="ownerPass" placeholder="كلمة مرور الأونر">
+    <button onclick="loginOwner()">دخول</button>
+    <p id="loginError"></p>
+  </div>
+</div>
+
+<!-- لوحة تحكم الأونر -->
+<div id="adminPanel" class="admin-overlay">
+  <div class="admin-box">
+    <h3>لوحة تحكم الأونر</h3>
+
+    <button onclick="toggleEditor()">إظهار / إخفاء المحرر</button>
+    <button onclick="toggleLock()">قفل / فتح التعديل</button>
+    <button class="danger" onclick="logoutOwner()">تسجيل خروج</button>
+
+    <p style="font-size:12px;opacity:.7;margin-top:10px">
+      هذه اللوحة خاصة بالأونر فقط
+    </p>
+  </div>
+</div>
+
+<!-- ===== المحرر ===== -->
+<div class="editor" id="editor">
   <label>HTML</label>
   <textarea id="html">
 <h1>Hello World</h1>
@@ -60,6 +153,107 @@ iframe {
   </textarea>
 
   <label>CSS</label>
+  <textarea id="css">
+body {
+  font-family: Arial;
+  background: #f5f5f5;
+}
+h1 {
+  color: #333;
+}
+  </textarea>
+
+  <label>JavaScript</label>
+  <textarea id="js">
+console.log("Hello from JS");
+  </textarea>
+</div>
+
+<iframe id="result"></iframe>
+
+<script>
+/* ===== كلمة مرور الأونر ===== */
+const OWNER_PASSWORD = "9732"; // غيرها فوراً
+
+const adminIcon  = document.getElementById("adminIcon");
+const ownerLogin = document.getElementById("ownerLogin");
+const adminPanel = document.getElementById("adminPanel");
+const loginError = document.getElementById("loginError");
+const editorBox  = document.getElementById("editor");
+const textareas  = document.querySelectorAll("textarea");
+
+/* ===== فتح لوحة التحكم ===== */
+adminIcon.onclick = () => {
+  if(localStorage.getItem("isOwner") === "true"){
+    adminPanel.style.display = "flex";
+  }else{
+    ownerLogin.style.display = "flex";
+  }
+};
+
+/* ===== تسجيل الدخول ===== */
+function loginOwner(){
+  const pass = document.getElementById("ownerPass").value;
+  if(pass === OWNER_PASSWORD){
+    localStorage.setItem("isOwner","true");
+    ownerLogin.style.display = "none";
+    adminPanel.style.display = "flex";
+    loginError.textContent = "";
+  }else{
+    loginError.textContent = "كلمة المرور غير صحيحة";
+  }
+}
+
+/* ===== تسجيل خروج ===== */
+function logoutOwner(){
+  localStorage.removeItem("isOwner");
+  adminPanel.style.display = "none";
+}
+
+/* ===== إظهار / إخفاء المحرر ===== */
+function toggleEditor(){
+  editorBox.classList.toggle("hidden");
+}
+
+/* ===== قفل / فتح التعديل ===== */
+function toggleLock(){
+  textareas.forEach(t => {
+    t.readOnly = !t.readOnly;
+  });
+}
+
+/* ===== إغلاق عند الضغط خارج ===== */
+document.querySelectorAll(".admin-overlay").forEach(ov=>{
+  ov.onclick = e => { if(e.target === ov) ov.style.display="none"; }
+});
+
+/* ===== تشغيل الكود ===== */
+function runCode() {
+  const html = document.getElementById("html").value;
+  const css  = document.getElementById("css").value;
+  const js   = document.getElementById("js").value;
+
+  const output = `
+<!DOCTYPE html>
+<html>
+<head>
+<style>${css}</style>
+</head>
+<body>
+${html}
+<script>${js}<\/script>
+</body>
+</html>
+  `;
+  document.getElementById("result").srcdoc = output;
+}
+
+textareas.forEach(el => el.addEventListener("input", runCode));
+runCode();
+</script>
+
+</body>
+</html>
   <textarea id="css">
 body {
   font-family: Arial;
