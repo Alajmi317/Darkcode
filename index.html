@@ -576,6 +576,217 @@
     </div>
   </div>
 
+  <div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-badge">DC</div>
+      <div class="brand-text">
+        <div class="brand-title">Dark Code</div>
+        <div class="brand-sub">لوحة تحكم</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <button class="nav-item active" data-page="overview">نظرة عامة</button>
+      <button class="nav-item" data-page="analytics">التحليلات</button>
+      <button class="nav-item" data-page="users">المستخدمين</button>
+      <button class="nav-item" data-page="orders">الطلبات</button>
+      <button class="nav-item" data-page="settings">الإعدادات</button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="mini-card">
+        <div class="mini-title">حالة النظام</div>
+        <div class="mini-row">
+          <span class="dot ok"></span>
+          <span>شغال</span>
+        </div>
+      </div>
+      <button class="btn ghost" id="toggleTheme">تبديل الثيم</button>
+    </div>
+  </aside>
+
+  <main class="content">
+    <header class="top">
+      <div class="top-left">
+        <button class="icon-btn" id="toggleSidebar" title="القائمة">☰</button>
+        <div>
+          <div class="page-title" id="pageTitle">نظرة عامة</div>
+          <div class="page-sub">آخر تحديث: <span id="lastUpdate">—</span></div>
+        </div>
+      </div>
+
+      <div class="top-right">
+        <div class="search">
+          <input id="searchInput" placeholder="بحث سريع..." />
+          <button class="btn primary" id="searchBtn">بحث</button>
+        </div>
+        <div class="avatar" title="حسابك">A</div>
+      </div>
+    </header>
+
+    <section class="grid">
+      <div class="card kpi">
+        <div class="kpi-title">المبيعات</div>
+        <div class="kpi-value" id="kpiSales">—</div>
+        <div class="kpi-sub">+ <span id="kpiSalesDelta">—</span>% هذا الأسبوع</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="kpi-title">الزيارات</div>
+        <div class="kpi-value" id="kpiVisits">—</div>
+        <div class="kpi-sub">+ <span id="kpiVisitsDelta">—</span>% هذا الأسبوع</div>
+      </div>
+
+      <div class="card kpi">
+        <div class="kpi-title">طلبات جديدة</div>
+        <div class="kpi-value" id="kpiOrders">—</div>
+        <div class="kpi-sub"><span class="pill">اليوم</span> <span id="kpiOrdersToday">—</span></div>
+      </div>
+
+      <div class="card kpi">
+        <div class="kpi-title">دعم فني</div>
+        <div class="kpi-value" id="kpiTickets">—</div>
+        <div class="kpi-sub">مفتوحة</div>
+      </div>
+    </section>
+
+    <section class="grid two">
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">نشاط الأسبوع</div>
+            <div class="card-sub">مخطط بسيط بدون مكتبات</div>
+          </div>
+          <div class="card-actions">
+            <button class="btn small" id="regenChart">تحديث</button>
+          </div>
+        </div>
+        <div class="chart">
+          <div class="bars" id="bars"></div>
+          <div class="xlabels" id="xlabels"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">آخر الطلبات</div>
+            <div class="card-sub">قائمة تجريبية</div>
+          </div>
+          <div class="card-actions">
+            <button class="btn small" id="addOrder">إضافة طلب</button>
+          </div>
+        </div>
+
+        <div class="table">
+          <div class="trow thead">
+            <div>#</div><div>العميل</div><div>الحالة</div><div>المبلغ</div>
+          </div>
+          <div id="ordersTable"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid two">
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">المهام</div>
+            <div class="card-sub">Todo صغير</div>
+          </div>
+        </div>
+
+        <form class="todo" id="todoForm">
+          <input id="todoInput" placeholder="أضف مهمة..." />
+          <button class="btn primary" type="submit">إضافة</button>
+        </form>
+
+        <div class="todo-list" id="todoList"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">ملاحظات</div>
+            <div class="card-sub">تُحفظ محليًا</div>
+          </div>
+          <div class="card-actions">
+            <button class="btn small danger" id="clearNotes">مسح</button>
+          </div>
+        </div>
+
+        <textarea class="notes" id="notes" placeholder="اكتب ملاحظاتك هنا..."></textarea>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <span>© Dark Code Dashboard</span>
+      <span class="sep">•</span>
+      <span>قالب جاهز للتعديل</span>
+    </footer>
+
+    <!-- صفحات وهمية -->
+    <section class="page" id="page-overview"></section>
+    <section class="page" id="page-analytics" hidden>
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">التحليلات</div>
+            <div class="card-sub">هنا تقدر تضيف رسوم/تقارير</div>
+          </div>
+        </div>
+        <p class="p">مثال: اربطها ببيانات حقيقية من API لاحقًا.</p>
+      </div>
+    </section>
+
+    <section class="page" id="page-users" hidden>
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">المستخدمين</div>
+            <div class="card-sub">قائمة تجريبية</div>
+          </div>
+        </div>
+        <div class="tags">
+          <span class="tag">Admin</span>
+          <span class="tag">Editor</span>
+          <span class="tag">Viewer</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="page-orders" hidden>
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">الطلبات</div>
+            <div class="card-sub">نفس جدول الطلبات (تقدر تكبره)</div>
+          </div>
+        </div>
+        <p class="p">استخدم نفس البيانات الموجودة في “آخر الطلبات”.</p>
+      </div>
+    </section>
+
+    <section class="page" id="page-settings" hidden>
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">الإعدادات</div>
+            <div class="card-sub">خيارات الشكل والتخصيص</div>
+          </div>
+        </div>
+        <div class="settings">
+          <label class="switch">
+            <input type="checkbox" id="autoSaveToggle" checked />
+            <span>حفظ محلي للملاحظات والمهام</span>
+          </label>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
 <script>
 /* =========================
    Storage + State
