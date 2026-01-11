@@ -1789,6 +1789,243 @@ function insertSnippet(key){
   setStatus("تم إدخال كود جاهز");
 }
 
+  const $ = (s)=>document.querySelector(s);
+const $$ = (s)=>Array.from(document.querySelectorAll(s));
+
+function nowStr(){
+  const d = new Date();
+  return d.toLocaleString("ar-KW");
+}
+
+$("#lastUpdate").textContent = nowStr();
+
+function rnd(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+// KPI data
+function refreshKPI(){
+  const sales = rnd(1200, 9200);
+  const visits = rnd(5000, 45000);
+  const orders = rnd(12, 190);
+  const tickets = rnd(0, 27);
+
+  $("#kpiSales").textContent = sales.toLocaleString("ar-KW") + " د.ك";
+  $("#kpiVisits").textContent = visits.toLocaleString("ar-KW");
+  $("#kpiOrders").textContent = orders.toLocaleString("ar-KW");
+  $("#kpiTickets").textContent = tickets.toLocaleString("ar-KW");
+
+  $("#kpiSalesDelta").textContent = rnd(1, 28);
+  $("#kpiVisitsDelta").textContent = rnd(1, 22);
+  $("#kpiOrdersToday").textContent = rnd(1, 35);
+}
+refreshKPI();
+
+// Simple bar chart
+const days = ["س", "ح", "ن", "ث", "ر", "خ", "ج"];
+function renderChart(){
+  const bars = $("#bars");
+  const xlabels = $("#xlabels");
+  bars.innerHTML = "";
+  xlabels.innerHTML = "";
+
+  days.forEach(d=>{
+    const h = rnd(25, 100);
+    const bar = document.createElement("div");
+    bar.className = "bar";
+    bar.style.height = h + "%";
+    bars.appendChild(bar);
+
+    const lab = document.createElement("div");
+    lab.textContent = d;
+    xlabels.appendChild(lab);
+  });
+}
+renderChart();
+
+$("#regenChart").addEventListener("click", ()=>{
+  renderChart();
+  $("#lastUpdate").textContent = nowStr();
+});
+
+// Orders table
+let orderId = 1042;
+let orders = [
+  {id: 1001, name:"عبدالله", status:"مدفوع", amount: "45 د.ك"},
+  {id: 1002, name:"سارة", status:"قيد المعالجة", amount: "18 د.ك"},
+  {id: 1003, name:"خالد", status:"مرفوض", amount: "60 د.ك"},
+  {id: 1004, name:"نورة", status:"مدفوع", amount: "12 د.ك"},
+];
+
+function badgeFor(status){
+  if(status === "مدفوع") return `<span class="badge ok">${status}</span>`;
+  if(status === "قيد المعالجة") return `<span class="badge wait">${status}</span>`;
+  return `<span class="badge no">${status}</span>`;
+}
+
+function renderOrders(){
+  const host = $("#ordersTable");
+  host.innerHTML = "";
+  orders.slice().reverse().slice(0,6).forEach(o=>{
+    const row = document.createElement("div");
+    row.className = "trow";
+    row.innerHTML = `
+      <div>${o.id}</div>
+      <div>${o.name}</div>
+      <div>${badgeFor(o.status)}</div>
+      <div>${o.amount}</div>
+    `;
+    host.appendChild(row);
+  });
+}
+renderOrders();
+
+$("#addOrder").addEventListener("click", ()=>{
+  orderId++;
+  const st = ["مدفوع","قيد المعالجة","مرفوض"][rnd(0,2)];
+  orders.push({id: orderId, name: ["علي","فاطمة","محمد","ريم","يوسف"][rnd(0,4)], status: st, amount: `${rnd(8,120)} د.ك`});
+  renderOrders();
+});
+
+// Todo + Notes local save
+const LS_TODO = "dc.todo";
+const LS_NOTES = "dc.notes";
+const LS_AUTOSAVE = "dc.autosave";
+
+let autoSave = (localStorage.getItem(LS_AUTOSAVE) ?? "1") === "1";
+$("#autoSaveToggle").checked = autoSave;
+
+$("#autoSaveToggle").addEventListener("change", (e)=>{
+  autoSave = e.target.checked;
+  localStorage.setItem(LS_AUTOSAVE, autoSave ? "1" : "0");
+});
+
+let todos = [];
+function saveTodos(){ if(autoSave) localStorage.setItem(LS_TODO, JSON.stringify(todos)); }
+function loadTodos(){
+  try{
+    const raw = localStorage.getItem(LS_TODO);
+    if(raw) todos = JSON.parse(raw) || [];
+  }catch{ todos = []; }
+}
+loadTodos();
+
+function renderTodos(){
+  const host = $("#todoList");
+  host.innerHTML = "";
+  if(todos.length === 0){
+    const empty = document.createElement("div");
+    empty.className = "p";
+    empty.textContent = "لا توجد مهام بعد.";
+    host.appendChild(empty);
+    return;
+  }
+  todos.forEach((t, idx)=>{
+    const row = document.createElement("div");
+    row.className = "todo-item";
+    row.innerHTML = `
+      <div>${t}</div>
+      <button data-del="${idx}">حذف</button>
+    `;
+    host.appendChild(row);
+  });
+
+  host.querySelectorAll("[data-del]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const i = Number(btn.getAttribute("data-del"));
+      todos.splice(i,1);
+      saveTodos();
+      renderTodos();
+    });
+  });
+}
+renderTodos();
+
+$("#todoForm").addEventListener("submit", (e)=>{
+  e.preventDefault();
+  const v = $("#todoInput").value.trim();
+  if(!v) return;
+  todos.push(v);
+  $("#todoInput").value = "";
+  saveTodos();
+  renderTodos();
+});
+
+const notes = $("#notes");
+function loadNotes(){
+  notes.value = autoSave ? (localStorage.getItem(LS_NOTES) || "") : "";
+}
+loadNotes();
+
+notes.addEventListener("input", ()=>{
+  if(!autoSave) return;
+  localStorage.setItem(LS_NOTES, notes.value);
+});
+
+$("#clearNotes").addEventListener("click", ()=>{
+  notes.value = "";
+  localStorage.removeItem(LS_NOTES);
+});
+
+// Navigation pages
+function showPage(name){
+  const map = {
+    overview: null,
+    analytics: $("#page-analytics"),
+    users: $("#page-users"),
+    orders: $("#page-orders"),
+    settings: $("#page-settings")
+  };
+
+  // hide all
+  ["analytics","users","orders","settings"].forEach(k=> map[k].hidden = true);
+
+  // show selected
+  if(name !== "overview"){
+    map[name].hidden = false;
+  }
+
+  const titles = {
+    overview: "نظرة عامة",
+    analytics: "التحليلات",
+    users: "المستخدمين",
+    orders: "الطلبات",
+    settings: "الإعدادات"
+  };
+  $("#pageTitle").textContent = titles[name] || "نظرة عامة";
+
+  $$(".nav-item").forEach(b=> b.classList.toggle("active", b.dataset.page === name));
+  $("#lastUpdate").textContent = nowStr();
+}
+
+$$(".nav-item").forEach(btn=>{
+  btn.addEventListener("click", ()=> showPage(btn.dataset.page));
+});
+
+// Sidebar toggle (mobile)
+const sidebar = document.querySelector(".sidebar");
+$("#toggleSidebar").addEventListener("click", ()=>{
+  sidebar.classList.toggle("open");
+});
+
+// Theme toggle
+let dark = true;
+$("#toggleTheme").addEventListener("click", ()=>{
+  dark = !dark;
+  document.documentElement.style.setProperty("--bg", dark ? "#0b0f14" : "#f7fafc");
+  document.documentElement.style.setProperty("--text", dark ? "#e6eefc" : "#0b1220");
+  document.documentElement.style.setProperty("--muted", dark ? "#9bb0d0" : "#334155");
+  document.documentElement.style.setProperty("--border", dark ? "rgba(255,255,255,.10)" : "rgba(15,23,42,.12)");
+});
+
+// Search (demo)
+$("#searchBtn").addEventListener("click", ()=>{
+  const q = $("#searchInput").value.trim();
+  if(!q) return;
+  alert("بحث تجريبي عن: " + q);
+});
+
+showPage("overview");
+
+
 document.querySelectorAll("[data-snippet]").forEach(el=>{
   el.addEventListener("click", ()=>{
     insertSnippet(el.getAttribute("data-snippet"));
