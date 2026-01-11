@@ -1,2416 +1,875 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Dark Code</title>
-
-<style>
-  :root{
-    --bg:#0b0f14; --panel:#0f1621;
-    --text:#e6eefc; --muted:#9bb0d0; --border:rgba(255,255,255,.10);
-    --accent:#3b82f6; --accent2:#8b5dff; --danger:#ff5d7a;
-    --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    --sans: system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans Arabic", sans-serif;
-    --radius:14px;
-    --shadow: 0 18px 50px rgba(0,0,0,.55);
-  }
-
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{
-    margin:0;
-    background:
-      radial-gradient(900px 500px at 15% 10%, rgba(59,130,246,.14), transparent 60%),
-      radial-gradient(900px 500px at 85% 15%, rgba(139,93,255,.12), transparent 55%),
-      var(--bg);
-    color:var(--text);
-    font-family:var(--sans);
-    display:flex;
-    flex-direction:column;
-  }
-
-  /* Topbar */
-  .topbar{
-    height:56px;
-    background: rgba(0,0,0,.25);
-    border-bottom:1px solid var(--border);
-    display:flex;
-    align-items:center;
-    padding:0 14px;
-    gap:12px;
-    backdrop-filter: blur(10px);
-  }
-  .logo{
-    width:34px; height:34px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    color:#fff;
-    border-radius:10px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-weight:800;
-    font-family:var(--sans);
-    flex:0 0 auto;
-  }
-  .site-name{font-weight:800; letter-spacing:.2px}
-  .sub{color:var(--muted); font-size:12px}
-  .spacer{flex:1}
-  .actions{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
-  .btn{
-    border:1px solid var(--border);
-    background: rgba(255,255,255,.04);
-    color:var(--text);
-    padding:9px 10px;
-    border-radius:12px;
-    cursor:pointer;
-    font-size:12px;
-    transition:.15s ease;
-    user-select:none;
-  }
-  .btn:hover{transform: translateY(-1px); background: rgba(255,255,255,.07);}
-  .btn.primary{border-color: rgba(59,130,246,.5); background: rgba(59,130,246,.18);}
-  .btn.danger{border-color: rgba(255,93,122,.35); background: rgba(255,93,122,.12);}
-  .btn.help{
-    width:38px; height:38px;
-    display:inline-flex; align-items:center; justify-content:center;
-    font-weight:900;
-  }
-
-  /* Layout */
-  .main{
-    flex:1;
-    min-height:0;
-    display:grid;
-    grid-template-columns: 1.05fr .95fr;
-    gap:12px;
-    padding:12px;
-  }
-
-  .panel{
-    border:1px solid var(--border);
-    background: rgba(255,255,255,.03);
-    border-radius: var(--radius);
-    overflow:hidden;
-    display:flex;
-    flex-direction:column;
-    min-height:0;
-  }
-  .panel-head{
-    padding:10px 12px;
-    border-bottom:1px solid var(--border);
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
-    background: rgba(0,0,0,.18);
-  }
-  .panel-head h2{margin:0; font-size:13px}
-  .panel-body{padding:10px; display:flex; flex-direction:column; gap:10px; min-height:0;}
-
-  /* Editor + Tabs */
-  .tabs{display:flex; gap:8px; flex-wrap:wrap}
-  .tab{
-    border:1px solid var(--border);
-    background: rgba(255,255,255,.02);
-    color:var(--muted);
-    padding:7px 10px;
-    border-radius:12px;
-    cursor:pointer;
-    font-size:12px;
-    transition:.15s ease;
-    user-select:none;
-  }
-  .tab.active{
-    color:var(--text);
-    border-color: rgba(59,130,246,.5);
-    background: rgba(59,130,246,.16);
-  }
-
-  textarea{
-    width:100%;
-    flex:1;
-    min-height:0;
-    resize:none;
-    border:1px solid var(--border);
-    border-radius: 12px;
-    padding:12px;
-    background: rgba(0,0,0,.25);
-    color:var(--text);
-    font-family: var(--mono);
-    font-size:13px;
-    line-height:1.6;
-    outline:none;
-  }
-  textarea:focus{
-    border-color: rgba(59,130,246,.55);
-    box-shadow: 0 0 0 3px rgba(59,130,246,.12);
-  }
-
-  /* Files list */
-  .files-wrap{display:grid; grid-template-columns: 1fr; gap:8px;}
-  .file-item{
-    border:1px solid var(--border);
-    background: rgba(0,0,0,.18);
-    border-radius:12px;
-    padding:10px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
-  }
-  .file-meta{display:flex; flex-direction:column; gap:2px; min-width:0;}
-  .file-name{font-size:12px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:320px;}
-  .file-type{font-size:11px; color:var(--muted)}
-  .file-actions{display:flex; gap:8px; flex:0 0 auto;}
-  .mini{padding:7px 9px; border-radius:10px; font-size:11px;}
-
-  /* Preview */
-  .preview-body{padding:0; min-height:0; flex:1;}
-  iframe{width:100%; height:100%; border:0; background:white;}
-
-  /* Footer/status */
-  .status{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    color:var(--muted);
-    font-size:12px;
-    padding:2px 2px 0 2px;
-    flex-wrap:wrap;
-  }
-  .sep{opacity:.5}
-
-  /* Modal (Help) */
-  .backdrop{
-    position:fixed;
-    inset:0;
-    background: rgba(0,0,0,.55);
-    display:none;
-    align-items:center;
-    justify-content:center;
-    padding:16px;
-    z-index:9999;
-  }
-  .backdrop.open{display:flex;}
-  .modal{
-    width:min(1020px, 100%);
-    max-height: min(86vh, 900px);
-    overflow:hidden;
-    border:1px solid var(--border);
-    background: rgba(15,22,33,.92);
-    border-radius: 18px;
-    box-shadow: var(--shadow);
-    backdrop-filter: blur(12px);
-    display:flex;
-    flex-direction:column;
-  }
-  .modal-head{
-    padding:12px 14px;
-    border-bottom:1px solid var(--border);
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
-    background: rgba(0,0,0,.18);
-  }
-  .modal-title{
-    display:flex;
-    flex-direction:column;
-    gap:2px;
-  }
-  .modal-title strong{font-size:13px}
-  .modal-title span{font-size:12px; color:var(--muted)}
-  .modal-body{
-    padding:12px 14px;
-    overflow:auto;
-    display:grid;
-    gap:14px;
-  }
-
-  .grid2{
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    gap:12px;
-  }
-  .card{
-    border:1px solid var(--border);
-    background: rgba(0,0,0,.18);
-    border-radius: 16px;
-    padding:12px;
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-  }
-  .card h3{margin:0; font-size:13px}
-  .card p{margin:0; color:var(--muted); font-size:12px; line-height:1.6}
-
-  .kbd{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    padding:2px 8px;
-    border-radius:10px;
-    border:1px solid var(--border);
-    background: rgba(255,255,255,.04);
-    color: var(--text);
-    font-family: var(--mono);
-    font-size: 12px;
-    white-space:nowrap;
-  }
-
-  .list{display:grid; gap:8px;}
-  .row{
-    display:flex;
-    gap:10px;
-    align-items:flex-start;
-    justify-content:space-between;
-    border:1px solid var(--border);
-    background: rgba(255,255,255,.03);
-    border-radius:14px;
-    padding:10px;
-  }
-  .row .desc{color:var(--muted); font-size:12px; line-height:1.5; flex:1;}
-  .row .keys{display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-start; min-width:240px;}
-
-  .pill{
-    display:inline-flex;
-    padding:7px 11px;
-    border-radius:999px;
-    border:1px solid var(--border);
-    background: rgba(59,130,246,.10);
-    cursor:pointer;
-    font-size:12px;
-    user-select:none;
-  }
-  .pill:hover{background: rgba(59,130,246,.16);}
-
-  .pill2{
-    display:inline-flex;
-    padding:7px 11px;
-    border-radius:999px;
-    border:1px solid var(--border);
-    background: rgba(139,93,255,.10);
-    cursor:pointer;
-    font-size:12px;
-    user-select:none;
-  }
-  .pill2:hover{background: rgba(139,93,255,.16);}
-
-  .chipbar{
-    display:flex;
-    gap:8px;
-    flex-wrap:wrap;
-  }
-
-  .splitTitle{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
-    margin-top:6px;
-  }
-  .splitTitle strong{font-size:12px; color:var(--text)}
-  .hint{font-size:12px; color:var(--muted)}
-
-  @media (max-width: 980px){
-    .main{grid-template-columns: 1fr;}
-    .grid2{grid-template-columns: 1fr;}
-  }
-</style>
-</head>
-
-<body>
-  <div class="topbar">
-    <div class="logo">DC</div>
-    <div>
-      <div class="site-name">Dark Code</div>
-      <div class="sub">محرر أكواد + معاينة + ملفات + أدوات سريعة قوية</div>
-    </div>
-
-    <div class="spacer"></div>
-
-    <div class="actions">
-      <button class="btn primary" id="btnRun" title="تشغيل (Ctrl + Enter)">تشغيل</button>
-      <button class="btn" id="btnImportCode" title="استيراد ملف للكود (Ctrl + O)">استيراد ملف للكود</button>
-      <button class="btn" id="btnAddAsset" title="إضافة ملفات للمشروع (Ctrl + Shift + O)">إضافة ملف للمشروع</button>
-      <button class="btn" id="btnExportProject" title="تصدير المشروع (Ctrl + S)">تصدير مشروع</button>
-      <button class="btn" id="btnImportProject" title="استيراد مشروع JSON">استيراد مشروع</button>
-      <button class="btn danger" id="btnReset" title="مسح كل شيء">مسح الكل</button>
-      <button class="btn help" id="btnHelp" title="الأدوات والاختصارات (F1)">؟</button>
-    </div>
-  </div>
-
-  <div class="main">
-    <!-- Editor panel -->
-    <section class="panel">
-      <div class="panel-head">
-        <h2>المحرر</h2>
-        <div class="tabs">
-          <button class="tab active" data-tab="html">HTML</button>
-          <button class="tab" data-tab="css">CSS</button>
-          <button class="tab" data-tab="js">JS</button>
-          <button class="tab" data-tab="files">الملفات</button>
-        </div>
-      </div>
-
-      <div class="panel-body" style="flex:1;">
-        <textarea id="codeArea" spellcheck="false"></textarea>
-
-        <!-- Files view -->
-        <div id="filesView" style="display:none; flex:1; min-height:0; overflow:auto;">
-          <div class="status" style="margin-bottom:8px;">
-            <span>الملفات الإضافية تنحقن داخل المعاينة تلقائيًا.</span>
-            <span class="sep">•</span>
-            <span>JS ⇦ script ، CSS ⇦ style</span>
-          </div>
-          <div class="files-wrap" id="filesList"></div>
-          <div class="status">
-            <span id="filesCount">0 ملفات</span>
-            <span class="sep">•</span>
-            <span>الحفظ تلقائي</span>
-          </div>
-        </div>
-
-        <div class="status">
-          <span id="statusText">جاهز</span>
-          <span class="sep">•</span>
-          <label style="display:flex; align-items:center; gap:8px;">
-            <input type="checkbox" id="autoRun" checked />
-            <span>تحديث مباشر</span>
-          </label>
-          <span class="sep">•</span>
-          <span title="F1 للمساعدة + أدوات سريعة">F1 للأدوات</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- Preview panel -->
-    <section class="panel">
-      <div class="panel-head">
-        <h2>المعاينة (يمين)</h2>
-        <div class="status" style="padding:0; margin:0;">
-          <span>خط Tajawal داخل المعاينة</span>
-        </div>
-      </div>
-      <div class="preview-body">
-        <iframe id="result" sandbox="allow-scripts"></iframe>
-      </div>
-    </section>
-  </div>
-
-  <!-- Hidden inputs for file picking -->
-  <input id="fileInputCode" type="file" style="display:none" accept=".html,.htm,.css,.js,.txt" />
-  <input id="fileInputAsset" type="file" style="display:none" multiple accept=".js,.css,.txt,.json" />
-  <input id="fileInputProject" type="file" style="display:none" accept=".json" />
-
-  <!-- Help Modal -->
-  <div class="backdrop" id="helpBackdrop" aria-hidden="true">
-    <div class="modal" role="dialog" aria-modal="true" aria-label="الأدوات السريعة والاختصارات">
-      <div class="modal-head">
-        <div class="modal-title">
-          <strong>أدوات سريعة + اختصارات + تعليم</strong>
-          <span>اضغط الأدوات لإدخال كود أو تنفيذ أمر على التحديد/السطر. إغلاق: Esc</span>
-        </div>
-        <div style="display:flex; gap:8px; align-items:center;">
-          <button class="btn" id="btnCloseHelp" title="إغلاق (Esc)">إغلاق</button>
-        </div>
-      </div>
-
-      <div class="modal-body">
-        <div class="grid2">
-          <div class="card">
-            <h3>اختصارات أساسية</h3>
-            <div class="list">
-              <div class="row">
-                <div class="desc">تشغيل/تحديث المعاينة</div>
-                <div class="keys"><span class="kbd">Ctrl</span><span class="kbd">Enter</span></div>
-              </div>
-              <div class="row">
-                <div class="desc">تصدير المشروع (JSON)</div>
-                <div class="keys"><span class="kbd">Ctrl</span><span class="kbd">S</span></div>
-              </div>
-              <div class="row">
-                <div class="desc">استيراد ملف للكود</div>
-                <div class="keys"><span class="kbd">Ctrl</span><span class="kbd">O</span></div>
-              </div>
-              <div class="row">
-                <div class="desc">إضافة ملفات للمشروع (Assets)</div>
-                <div class="keys"><span class="kbd">Ctrl</span><span class="kbd">Shift</span><span class="kbd">O</span></div>
-              </div>
-              <div class="row">
-                <div class="desc">فتح الأدوات/المساعدة</div>
-                <div class="keys"><span class="kbd">F1</span></div>
-              </div>
-              <div class="row">
-                <div class="desc">إغلاق النافذة</div>
-                <div class="keys"><span class="kbd">Esc</span></div>
-              </div>
-            </div>
-            <p>الحفظ تلقائي دائمًا.</p>
-          </div>
-
-          <div class="card">
-            <h3>أوامر تحرير سريعة (Editor Tools)</h3>
-            <p>تشتغل على السطر الحالي أو التحديد داخل المحرر.</p>
-
-            <div class="splitTitle">
-              <strong>أوامر مباشرة</strong>
-              <span class="hint">لا تعمل على تبويب “الملفات”</span>
-            </div>
-
-            <div class="chipbar">
-              <span class="pill2" data-tool="toggle-comment">تعليق/فك تعليق</span>
-              <span class="pill2" data-tool="duplicate">تكرار</span>
-              <span class="pill2" data-tool="delete-line">حذف السطر</span>
-              <span class="pill2" data-tool="move-up">نقل لأعلى</span>
-              <span class="pill2" data-tool="move-down">نقل لأسفل</span>
-              <span class="pill2" data-tool="wrap-div">لف بـ div</span>
-              <span class="pill2" data-tool="wrap-section">لف بـ section</span>
-              <span class="pill2" data-tool="wrap-span">لف بـ span</span>
-              <span class="pill2" data-tool="wrap-a">لف بـ a</span>
-              <span class="pill2" data-tool="wrap-button">لف بـ button</span>
-              <span class="pill2" data-tool="log-selection">console.log</span>
-              <span class="pill2" data-tool="make-fn">إنشاء function</span>
-            </div>
-
-            <div class="list" style="margin-top:10px;">
-              <div class="row">
-                <div class="desc">تعليق/فك تعليق</div>
-                <div class="keys"><span class="kbd">Ctrl</span><span class="kbd">/</span></div>
-              </div>
-              <div class="row">
-                <div class="desc">تكرار السطر/التحديد</div>
-                <div class="keys"><span class="kbd">Ctrl</span><span class="kbd">D</span></div>
-              </div>
-              <div class="row">
-                <div class="desc">حذف السطر</div>
-                <div class="keys"><span class="kbd">Ctrl</span><span class="kbd">L</span></div>
-              </div>
-              <div class="row">
-                <div class="desc">نقل السطر لأعلى/أسفل</div>
-                <div class="keys">
-                  <span class="kbd">Alt</span><span class="kbd">↑</span>
-                  <span class="kbd">Alt</span><span class="kbd">↓</span>
-                </div>
-              </div>
-              <div class="row">
-                <div class="desc">console.log للتحديد</div>
-                <div class="keys"><span class="kbd">Ctrl</span><span class="kbd">Shift</span><span class="kbd">L</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3>Snippets كثيرة (اضغط لإدخال كود جاهز)</h3>
-          <p>تُضاف في مكان المؤشر داخل التبويب الحالي. لو كنت على “الملفات” ارجع لـ HTML/CSS/JS.</p>
-
-          <div class="splitTitle"><strong>HTML Snippets</strong><span class="hint">واجهات جاهزة</span></div>
-          <div class="chipbar">
-            <span class="pill" data-snippet="html-basic">هيكل صفحة</span>
-            <span class="pill" data-snippet="html-hero">Hero</span>
-            <span class="pill" data-snippet="html-card">Card</span>
-            <span class="pill" data-snippet="html-navbar">Navbar</span>
-            <span class="pill" data-snippet="html-grid">Grid</span>
-            <span class="pill" data-snippet="html-form">Form</span>
-            <span class="pill" data-snippet="html-modal">Modal</span>
-            <span class="pill" data-snippet="html-table">Table</span>
-            <span class="pill" data-snippet="html-footer">Footer</span>
-            <span class="pill" data-snippet="html-badge">Badges</span>
-            <span class="pill" data-snippet="html-tabs">Tabs UI</span>
-            <span class="pill" data-snippet="html-toast">Toast</span>
-          </div>
-
-          <div class="splitTitle"><strong>CSS Snippets</strong><span class="hint">ستايلات قوية</span></div>
-          <div class="chipbar">
-            <span class="pill" data-snippet="css-reset">Reset</span>
-            <span class="pill" data-snippet="css-center">توسيط</span>
-            <span class="pill" data-snippet="css-dark">Dark UI</span>
-            <span class="pill" data-snippet="css-card">Card style</span>
-            <span class="pill" data-snippet="css-grid">Grid responsive</span>
-            <span class="pill" data-snippet="css-buttons">Buttons</span>
-            <span class="pill" data-snippet="css-form">Form</span>
-            <span class="pill" data-snippet="css-modal">Modal</span>
-            <span class="pill" data-snippet="css-anim">Animations</span>
-            <span class="pill" data-snippet="css-shadow">Shadows</span>
-          </div>
-
-          <div class="splitTitle"><strong>JS Snippets</strong><span class="hint">وظائف جاهزة</span></div>
-          <div class="chipbar">
-            <span class="pill" data-snippet="js-click">زر + حدث</span>
-            <span class="pill" data-snippet="js-tabs">Tabs logic</span>
-            <span class="pill" data-snippet="js-modal">Modal logic</span>
-            <span class="pill" data-snippet="js-toast">Toast logic</span>
-            <span class="pill" data-snippet="js-localstorage">LocalStorage</span>
-            <span class="pill" data-snippet="js-fetch">Fetch JSON</span>
-            <span class="pill" data-snippet="js-debounce">Debounce</span>
-            <span class="pill" data-snippet="js-theme">Theme toggle</span>
-            <span class="pill" data-snippet="js-copy">Copy to clipboard</span>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3>تعليم سريع</h3>
-          <div class="list">
-            <div class="row">
-              <div class="desc"><strong>HTML</strong>: يبني عناصر الصفحة (عناوين/أزرار/أقسام).</div>
-              <div class="keys"><span class="kbd">تبويب HTML</span></div>
-            </div>
-            <div class="row">
-              <div class="desc"><strong>CSS</strong>: ينسّق الشكل (ألوان/خطوط/مسافات).</div>
-              <div class="keys"><span class="kbd">تبويب CSS</span></div>
-            </div>
-            <div class="row">
-              <div class="desc"><strong>JS</strong>: يضيف تفاعل (ضغط زر/جلب بيانات/منطق).</div>
-              <div class="keys"><span class="kbd">تبويب JS</span></div>
-            </div>
-            <div class="row">
-              <div class="desc">لإضافة سكربتات/ستايلات متعددة: استخدم “إضافة ملف للمشروع” وستعمل تلقائيًا في المعاينة.</div>
-              <div class="keys"><span class="kbd">الملفات</span></div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-  <div class="app">
-  <aside class="sidebar">
-    <div class="brand">
-      <div class="brand-badge">DC</div>
-      <div class="brand-text">
-        <div class="brand-title">Dark Code</div>
-        <div class="brand-sub">لوحة تحكم</div>
-      </div>
-    </div>
-
-    <nav class="nav">
-      <button class="nav-item active" data-page="overview">نظرة عامة</button>
-      <button class="nav-item" data-page="analytics">التحليلات</button>
-      <button class="nav-item" data-page="users">المستخدمين</button>
-      <button class="nav-item" data-page="orders">الطلبات</button>
-      <button class="nav-item" data-page="settings">الإعدادات</button>
-    </nav>
-
-    <div class="sidebar-footer">
-      <div class="mini-card">
-        <div class="mini-title">حالة النظام</div>
-        <div class="mini-row">
-          <span class="dot ok"></span>
-          <span>شغال</span>
-        </div>
-      </div>
-      <button class="btn ghost" id="toggleTheme">تبديل الثيم</button>
-    </div>
-  </aside>
-
-  <main class="content">
-    <header class="top">
-      <div class="top-left">
-        <button class="icon-btn" id="toggleSidebar" title="القائمة">☰</button>
-        <div>
-          <div class="page-title" id="pageTitle">نظرة عامة</div>
-          <div class="page-sub">آخر تحديث: <span id="lastUpdate">—</span></div>
-        </div>
-      </div>
-
-      <div class="top-right">
-        <div class="search">
-          <input id="searchInput" placeholder="بحث سريع..." />
-          <button class="btn primary" id="searchBtn">بحث</button>
-        </div>
-        <div class="avatar" title="حسابك">A</div>
-      </div>
-    </header>
-
-    <section class="grid">
-      <div class="card kpi">
-        <div class="kpi-title">المبيعات</div>
-        <div class="kpi-value" id="kpiSales">—</div>
-        <div class="kpi-sub">+ <span id="kpiSalesDelta">—</span>% هذا الأسبوع</div>
-      </div>
-
-      <div class="card kpi">
-        <div class="kpi-title">الزيارات</div>
-        <div class="kpi-value" id="kpiVisits">—</div>
-        <div class="kpi-sub">+ <span id="kpiVisitsDelta">—</span>% هذا الأسبوع</div>
-      </div>
-
-      <div class="card kpi">
-        <div class="kpi-title">طلبات جديدة</div>
-        <div class="kpi-value" id="kpiOrders">—</div>
-        <div class="kpi-sub"><span class="pill">اليوم</span> <span id="kpiOrdersToday">—</span></div>
-      </div>
-
-      <div class="card kpi">
-        <div class="kpi-title">دعم فني</div>
-        <div class="kpi-value" id="kpiTickets">—</div>
-        <div class="kpi-sub">مفتوحة</div>
-      </div>
-    </section>
-
-    <section class="grid two">
-      <div class="card">
-        <div class="card-head">
-          <div>
-            <div class="card-title">نشاط الأسبوع</div>
-            <div class="card-sub">مخطط بسيط بدون مكتبات</div>
-          </div>
-          <div class="card-actions">
-            <button class="btn small" id="regenChart">تحديث</button>
-          </div>
-        </div>
-        <div class="chart">
-          <div class="bars" id="bars"></div>
-          <div class="xlabels" id="xlabels"></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-head">
-          <div>
-            <div class="card-title">آخر الطلبات</div>
-            <div class="card-sub">قائمة تجريبية</div>
-          </div>
-          <div class="card-actions">
-            <button class="btn small" id="addOrder">إضافة طلب</button>
-          </div>
-        </div>
-
-        <div class="table">
-          <div class="trow thead">
-            <div>#</div><div>العميل</div><div>الحالة</div><div>المبلغ</div>
-          </div>
-          <div id="ordersTable"></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="grid two">
-      <div class="card">
-        <div class="card-head">
-          <div>
-            <div class="card-title">المهام</div>
-            <div class="card-sub">Todo صغير</div>
-          </div>
-        </div>
-
-        <form class="todo" id="todoForm">
-          <input id="todoInput" placeholder="أضف مهمة..." />
-          <button class="btn primary" type="submit">إضافة</button>
-        </form>
-
-        <div class="todo-list" id="todoList"></div>
-      </div>
-
-      <div class="card">
-        <div class="card-head">
-          <div>
-            <div class="card-title">ملاحظات</div>
-            <div class="card-sub">تُحفظ محليًا</div>
-          </div>
-          <div class="card-actions">
-            <button class="btn small danger" id="clearNotes">مسح</button>
-          </div>
-        </div>
-
-        <textarea class="notes" id="notes" placeholder="اكتب ملاحظاتك هنا..."></textarea>
-      </div>
-    </section>
-
-    <footer class="footer">
-      <span>© Dark Code Dashboard</span>
-      <span class="sep">•</span>
-      <span>قالب جاهز للتعديل</span>
-    </footer>
-
-    <!-- صفحات وهمية -->
-    <section class="page" id="page-overview"></section>
-    <section class="page" id="page-analytics" hidden>
-      <div class="card">
-        <div class="card-head">
-          <div>
-            <div class="card-title">التحليلات</div>
-            <div class="card-sub">هنا تقدر تضيف رسوم/تقارير</div>
-          </div>
-        </div>
-        <p class="p">مثال: اربطها ببيانات حقيقية من API لاحقًا.</p>
-      </div>
-    </section>
-
-    <section class="page" id="page-users" hidden>
-      <div class="card">
-        <div class="card-head">
-          <div>
-            <div class="card-title">المستخدمين</div>
-            <div class="card-sub">قائمة تجريبية</div>
-          </div>
-        </div>
-        <div class="tags">
-          <span class="tag">Admin</span>
-          <span class="tag">Editor</span>
-          <span class="tag">Viewer</span>
-        </div>
-      </div>
-    </section>
-
-    <section class="page" id="page-orders" hidden>
-      <div class="card">
-        <div class="card-head">
-          <div>
-            <div class="card-title">الطلبات</div>
-            <div class="card-sub">نفس جدول الطلبات (تقدر تكبره)</div>
-          </div>
-        </div>
-        <p class="p">استخدم نفس البيانات الموجودة في “آخر الطلبات”.</p>
-      </div>
-    </section>
-
-    <section class="page" id="page-settings" hidden>
-      <div class="card">
-        <div class="card-head">
-          <div>
-            <div class="card-title">الإعدادات</div>
-            <div class="card-sub">خيارات الشكل والتخصيص</div>
-          </div>
-        </div>
-        <div class="settings">
-          <label class="switch">
-            <input type="checkbox" id="autoSaveToggle" checked />
-            <span>حفظ محلي للملاحظات والمهام</span>
-          </label>
-        </div>
-      </div>
-    </section>
-  </main>
-</div>
-
-<script>
-/* =========================
-   Storage + State
-========================= */
-const STORAGE_KEY = "darkcode.project.v4";
-
-const codeArea = document.getElementById("codeArea");
-const resultFrame = document.getElementById("result");
-const statusText = document.getElementById("statusText");
-const autoRun = document.getElementById("autoRun");
-
-const filesView = document.getElementById("filesView");
-const filesList = document.getElementById("filesList");
-const filesCount = document.getElementById("filesCount");
-
-const fileInputCode = document.getElementById("fileInputCode");
-const fileInputAsset = document.getElementById("fileInputAsset");
-const fileInputProject = document.getElementById("fileInputProject");
-
-const tabs = Array.from(document.querySelectorAll(".tab"));
-
-const helpBackdrop = document.getElementById("helpBackdrop");
-const btnHelp = document.getElementById("btnHelp");
-const btnCloseHelp = document.getElementById("btnCloseHelp");
-
-let activeTab = "html";
-
-/*
-  assets: [
-    { id, name, type: "js"|"css"|"txt"|"json", content }
-  ]
-*/
-let state = {
-  html: "<h1>Hello World</h1>\n<p>اكتب كودك وشوف النتيجة.</p>\n<button id=\"btn\">اضغطني</button>",
-  css: "body{background:#f2f2f2; text-align:center; padding:18px}\nh1{color:blue}",
-  js: "document.getElementById('btn')?.addEventListener('click',()=>alert('يشتغل!'));",
-  assets: []
-};
-
-function setStatus(msg){
-  statusText.textContent = msg;
-  clearTimeout(setStatus._t);
-  setStatus._t = setTimeout(()=> statusText.textContent = "جاهز", 1200);
-}
-
-function save(){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-}
-
-function load(){
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if(!raw) return;
-  try{
-    const parsed = JSON.parse(raw);
-    if(parsed && typeof parsed === "object"){
-      state = {
-        html: parsed.html ?? state.html,
-        css: parsed.css ?? state.css,
-        js: parsed.js ?? state.js,
-        assets: Array.isArray(parsed.assets) ? parsed.assets : []
-      };
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>لوحة تحكم - Dark Code</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --panel:rgba(255,255,255,.03);
+      --panel2:rgba(0,0,0,.18);
+      --text:#e6eefc;
+      --muted:#9bb0d0;
+      --border:rgba(255,255,255,.10);
+      --accent:#3b82f6;
+      --accent2:#8b5dff;
+      --danger:#ff5d7a;
+      --ok:#22c55e;
+      --warn:#f59e0b;
+      --shadow: 0 18px 50px rgba(0,0,0,.55);
+      --radius:18px;
     }
-  }catch{}
-}
 
-/* =========================
-   Tabs + Editor binding
-========================= */
-function applyActiveTabToEditor(){
-  if(activeTab === "files"){
-    codeArea.style.display = "none";
-    filesView.style.display = "block";
-    renderFiles();
-    return;
-  }
-  filesView.style.display = "none";
-  codeArea.style.display = "block";
-  codeArea.value = state[activeTab] ?? "";
-}
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:'Tajawal', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:
+        radial-gradient(900px 500px at 15% 10%, rgba(59,130,246,.14), transparent 60%),
+        radial-gradient(900px 500px at 85% 15%, rgba(139,93,255,.12), transparent 55%),
+        var(--bg);
+      color:var(--text);
+    }
 
-function commitEditorToState(){
-  if(activeTab === "files") return;
-  state[activeTab] = codeArea.value;
-  save();
-}
+    .app{
+      min-height:100vh;
+      display:grid;
+      grid-template-columns: 290px 1fr;
+    }
 
-function setActiveTab(tab){
-  activeTab = tab;
-  tabs.forEach(t=>{
-    const is = t.dataset.tab === tab;
-    t.classList.toggle("active", is);
-  });
-  applyActiveTabToEditor();
-  if(activeTab !== "files") codeArea.focus();
-  setStatus(`تبويب: ${tab.toUpperCase()}`);
-}
+    /* Sidebar */
+    .sidebar{
+      height:100vh;
+      position:sticky;
+      top:0;
+      padding:14px;
+      border-left:1px solid var(--border);
+      background: var(--panel);
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      backdrop-filter: blur(10px);
+    }
 
-/* =========================
-   Preview build (inject assets)
-========================= */
-function buildAssetsInjection(){
-  const cssAssets = state.assets
-    .filter(a => a.type === "css")
-    .map(a => a.content)
-    .join("\n\n/* ---- asset ---- */\n\n");
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:12px;
+      border:1px solid var(--border);
+      background: var(--panel2);
+      border-radius:16px;
+    }
+    .brand-badge{
+      width:44px;height:44px;border-radius:16px;
+      display:flex;align-items:center;justify-content:center;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      font-weight:900;color:#fff;
+      flex:0 0 auto;
+    }
+    .brand-title{font-weight:900}
+    .brand-sub{font-size:12px;color:var(--muted); margin-top:2px}
 
-  const jsAssets  = state.assets
-    .filter(a => a.type === "js")
-    .map(a => a.content)
-    .join("\n\n// ---- asset ----\n\n");
+    .nav{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .nav-item{
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.16);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:14px;
+      cursor:pointer;
+      text-align:right;
+      transition:.15s ease;
+    }
+    .nav-item:hover{transform: translateY(-1px); background: rgba(255,255,255,.06);}
+    .nav-item.active{
+      border-color: rgba(59,130,246,.5);
+      background: rgba(59,130,246,.16);
+    }
 
-  return { cssAssets, jsAssets };
-}
+    .sidebar-footer{
+      margin-top:auto;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .mini-card{
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.16);
+      border-radius:16px;
+      padding:12px;
+    }
+    .mini-title{font-size:12px;color:var(--muted); margin-bottom:8px;}
+    .mini-row{display:flex; gap:8px; align-items:center;}
+    .dot{width:10px;height:10px;border-radius:50%;}
+    .dot.ok{background: var(--ok);}
 
-function run(){
-  commitEditorToState();
+    /* Content */
+    .content{
+      padding:14px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      min-width:0;
+    }
 
-  const { cssAssets, jsAssets } = buildAssetsInjection();
+    .top{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:center;
+      padding:12px 14px;
+      border:1px solid var(--border);
+      background: var(--panel);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .top-left{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width:0;
+    }
+    .icon-btn{
+      width:44px;height:44px;
+      border-radius:16px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.16);
+      color:var(--text);
+      cursor:pointer;
+      font-size:18px;
+      flex:0 0 auto;
+    }
+    .page-title{font-weight:900; font-size:16px;}
+    .page-sub{font-size:12px;color:var(--muted); margin-top:2px;}
 
-  const output = `
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+    .top-right{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .search{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.16);
+      border-radius:16px;
+      padding:8px;
+    }
+    .search input{
+      width:min(280px, 42vw);
+      border:0; outline:0;
+      background:transparent;
+      color:var(--text);
+      font-family:inherit;
+    }
+    .avatar{
+      width:44px;height:44px;border-radius:16px;
+      display:flex;align-items:center;justify-content:center;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.18);
+      font-weight:900;
+      flex:0 0 auto;
+    }
 
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    .btn{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color:var(--text);
+      padding:9px 10px;
+      border-radius:14px;
+      cursor:pointer;
+      transition:.15s ease;
+      font-family:inherit;
+    }
+    .btn:hover{transform: translateY(-1px); background: rgba(255,255,255,.07);}
+    .btn.primary{border-color: rgba(59,130,246,.5); background: rgba(59,130,246,.18);}
+    .btn.ghost{background: transparent;}
+    .btn.small{padding:7px 10px; font-size:12px;}
+    .btn.danger{border-color: rgba(255,93,122,.35); background: rgba(255,93,122,.12);}
 
-<style>
-body{ font-family:'Tajawal', sans-serif; }
-${state.css || ""}
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap:12px;
+      min-width:0;
+    }
+    .grid.two{
+      grid-template-columns: 1.2fr .8fr;
+    }
 
-/* ===== CSS Assets ===== */
-${cssAssets || ""}
-</style>
+    .card{
+      border:1px solid var(--border);
+      background: var(--panel);
+      border-radius: var(--radius);
+      padding:12px;
+      box-shadow: var(--shadow);
+      min-width:0;
+    }
+    .card-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:12px;
+    }
+    .card-title{font-weight:900}
+    .card-sub{font-size:12px;color:var(--muted); margin-top:2px;}
+
+    /* KPI */
+    .kpi-title{font-size:12px;color:var(--muted)}
+    .kpi-value{font-size:28px;font-weight:900;margin-top:8px}
+    .kpi-sub{font-size:12px;color:var(--muted); margin-top:8px;}
+    .pill{
+      display:inline-flex;
+      padding:2px 8px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(59,130,246,.10);
+      margin-left:6px;
+    }
+
+    /* Chart */
+    .chart{display:flex; flex-direction:column; gap:10px;}
+    .bars{
+      height:150px;
+      display:grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap:10px;
+      align-items:end;
+    }
+    .bar{
+      border-radius: 16px;
+      border:1px solid var(--border);
+      background: linear-gradient(180deg, rgba(59,130,246,.30), rgba(139,93,255,.18));
+      position:relative;
+      overflow:hidden;
+    }
+    .bar::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background: linear-gradient(180deg, rgba(255,255,255,.10), transparent 55%);
+      pointer-events:none;
+    }
+    .xlabels{
+      display:grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap:10px;
+      color:var(--muted);
+      font-size:12px;
+      text-align:center;
+    }
+
+    /* Table */
+    .table{display:flex; flex-direction:column; gap:8px;}
+    .trow{
+      display:grid;
+      grid-template-columns: 70px 1fr 130px 120px;
+      gap:10px;
+      align-items:center;
+      padding:10px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.16);
+      border-radius: 16px;
+      font-size:12px;
+    }
+    .thead{background: rgba(59,130,246,.10); font-weight:800;}
+    .badge{
+      display:inline-flex;
+      padding:4px 10px;
+      border-radius: 999px;
+      border:1px solid var(--border);
+      font-size:12px;
+      justify-content:center;
+      width: fit-content;
+    }
+    .badge.ok{background: rgba(34,197,94,.14); border-color: rgba(34,197,94,.35);}
+    .badge.wait{background: rgba(245,158,11,.14); border-color: rgba(245,158,11,.35);}
+    .badge.no{background: rgba(255,93,122,.12); border-color: rgba(255,93,122,.28);}
+
+    /* Todo + Notes */
+    .todo{
+      display:flex;
+      gap:8px;
+    }
+    .todo input{
+      flex:1;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.16);
+      color: var(--text);
+      border-radius:16px;
+      padding:10px 12px;
+      outline:0;
+      font-family:inherit;
+    }
+    .todo-list{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      margin-top:10px;
+    }
+    .todo-item{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:center;
+      padding:10px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.16);
+      border-radius: 16px;
+      font-size:12px;
+    }
+    .todo-item button{
+      border:1px solid var(--border);
+      background: transparent;
+      color:var(--text);
+      border-radius: 14px;
+      padding:7px 10px;
+      cursor:pointer;
+      font-family:inherit;
+    }
+
+    .notes{
+      width:100%;
+      min-height: 170px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.16);
+      color: var(--text);
+      border-radius: 16px;
+      padding:12px;
+      outline:0;
+      resize: vertical;
+      font-family:inherit;
+      line-height:1.7;
+    }
+
+    .footer{
+      padding:10px 6px;
+      color:var(--muted);
+      font-size:12px;
+      display:flex;
+      gap:10px;
+      justify-content:center;
+    }
+    .sep{opacity:.5}
+
+    /* Pages */
+    .page[hidden]{display:none;}
+    .p{margin:0; color:var(--muted); line-height:1.8}
+
+    .settings{display:flex; flex-direction:column; gap:10px;}
+    .switch{display:flex; gap:10px; align-items:center; color:var(--muted); font-size:12px;}
+    .switch input{accent-color: var(--accent);}
+
+    /* Responsive */
+    @media (max-width: 1100px){
+      .grid{grid-template-columns: repeat(2, 1fr);}
+      .grid.two{grid-template-columns: 1fr;}
+    }
+    @media (max-width: 820px){
+      .app{grid-template-columns: 1fr;}
+      .sidebar{
+        position:fixed;
+        right:0; top:0; bottom:0;
+        width: 88vw; max-width:340px;
+        transform: translateX(110%);
+        transition: .2s ease;
+        z-index:50;
+      }
+      .sidebar.open{transform: translateX(0);}
+      .content{padding:12px;}
+      .search input{width:min(220px, 52vw);}
+    }
+  </style>
 </head>
+
 <body>
-${state.html || ""}
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-badge">DC</div>
+        <div class="brand-text">
+          <div class="brand-title">Dark Code</div>
+          <div class="brand-sub">لوحة تحكم</div>
+        </div>
+      </div>
 
-<script>
-try{
-${state.js || ""}
+      <nav class="nav">
+        <button class="nav-item active" data-page="overview">نظرة عامة</button>
+        <button class="nav-item" data-page="analytics">التحليلات</button>
+        <button class="nav-item" data-page="users">المستخدمين</button>
+        <button class="nav-item" data-page="orders">الطلبات</button>
+        <button class="nav-item" data-page="settings">الإعدادات</button>
+      </nav>
 
-/* ===== JS Assets ===== */
-${jsAssets || ""}
-}catch(e){
-  document.body.insertAdjacentHTML('beforeend',
-    '<pre style="white-space:pre-wrap;background:#fee2e2;color:#7f1d1d;padding:12px;border-radius:12px;margin-top:12px;">JS Error: ' + e + '</pre>'
-  );
-  console.error(e);
-}
-<\/script>
-</body>
-</html>`;
-  resultFrame.srcdoc = output;
-  setStatus("تم التحديث");
-}
+      <div class="sidebar-footer">
+        <div class="mini-card">
+          <div class="mini-title">حالة النظام</div>
+          <div class="mini-row">
+            <span class="dot ok"></span>
+            <span>شغال</span>
+          </div>
+        </div>
+        <button class="btn ghost" id="toggleTheme">تبديل الثيم</button>
+      </div>
+    </aside>
 
-let debounceT = null;
-function scheduleRun(){
-  if(!autoRun.checked) return;
-  clearTimeout(debounceT);
-  debounceT = setTimeout(run, 200);
-}
+    <main class="content">
+      <header class="top">
+        <div class="top-left">
+          <button class="icon-btn" id="toggleSidebar" title="القائمة">☰</button>
+          <div>
+            <div class="page-title" id="pageTitle">نظرة عامة</div>
+            <div class="page-sub">آخر تحديث: <span id="lastUpdate">—</span></div>
+          </div>
+        </div>
 
-/* =========================
-   Files (Assets) management
-========================= */
-function extToType(name){
-  const n = (name || "").toLowerCase();
-  if(n.endsWith(".js")) return "js";
-  if(n.endsWith(".css")) return "css";
-  if(n.endsWith(".json")) return "json";
-  return "txt";
-}
+        <div class="top-right">
+          <div class="search">
+            <input id="searchInput" placeholder="بحث سريع..." />
+            <button class="btn primary" id="searchBtn">بحث</button>
+          </div>
+          <div class="avatar" title="حسابك">A</div>
+        </div>
+      </header>
 
-function uid(){
-  return Math.random().toString(16).slice(2) + Date.now().toString(16);
-}
+      <!-- Overview Section -->
+      <section id="overviewSection">
+        <section class="grid">
+          <div class="card kpi">
+            <div class="kpi-title">المبيعات</div>
+            <div class="kpi-value" id="kpiSales">—</div>
+            <div class="kpi-sub">+ <span id="kpiSalesDelta">—</span>% هذا الأسبوع</div>
+          </div>
 
-function renderFiles(){
-  filesList.innerHTML = "";
-  filesCount.textContent = `${state.assets.length} ملفات`;
+          <div class="card kpi">
+            <div class="kpi-title">الزيارات</div>
+            <div class="kpi-value" id="kpiVisits">—</div>
+            <div class="kpi-sub">+ <span id="kpiVisitsDelta">—</span>% هذا الأسبوع</div>
+          </div>
 
-  if(state.assets.length === 0){
-    const empty = document.createElement("div");
-    empty.className = "status";
-    empty.textContent = "لا توجد ملفات إضافية. اضغط (إضافة ملف للمشروع).";
-    filesList.appendChild(empty);
-    return;
-  }
+          <div class="card kpi">
+            <div class="kpi-title">طلبات جديدة</div>
+            <div class="kpi-value" id="kpiOrders">—</div>
+            <div class="kpi-sub"><span class="pill">اليوم</span> <span id="kpiOrdersToday">—</span></div>
+          </div>
 
-  state.assets.forEach(asset=>{
-    const row = document.createElement("div");
-    row.className = "file-item";
+          <div class="card kpi">
+            <div class="kpi-title">دعم فني</div>
+            <div class="kpi-value" id="kpiTickets">—</div>
+            <div class="kpi-sub">مفتوحة</div>
+          </div>
+        </section>
 
-    const meta = document.createElement("div");
-    meta.className = "file-meta";
+        <section class="grid two">
+          <div class="card">
+            <div class="card-head">
+              <div>
+                <div class="card-title">نشاط الأسبوع</div>
+                <div class="card-sub">مخطط بسيط بدون مكتبات</div>
+              </div>
+              <div class="card-actions">
+                <button class="btn small" id="regenChart">تحديث</button>
+              </div>
+            </div>
 
-    const name = document.createElement("div");
-    name.className = "file-name";
-    name.textContent = asset.name;
+            <div class="chart">
+              <div class="bars" id="bars"></div>
+              <div class="xlabels" id="xlabels"></div>
+            </div>
+          </div>
 
-    const type = document.createElement("div");
-    type.className = "file-type";
-    type.textContent = `النوع: ${asset.type.toUpperCase()} • يشتغل داخل المعاينة: ${asset.type === "js" || asset.type === "css" ? "نعم" : "لا"}`;
+          <div class="card">
+            <div class="card-head">
+              <div>
+                <div class="card-title">آخر الطلبات</div>
+                <div class="card-sub">قائمة تجريبية</div>
+              </div>
+              <div class="card-actions">
+                <button class="btn small" id="addOrder">إضافة طلب</button>
+              </div>
+            </div>
 
-    meta.appendChild(name);
-    meta.appendChild(type);
+            <div class="table">
+              <div class="trow thead">
+                <div>#</div><div>العميل</div><div>الحالة</div><div>المبلغ</div>
+              </div>
+              <div id="ordersTable"></div>
+            </div>
+          </div>
+        </section>
 
-    const acts = document.createElement("div");
-    acts.className = "file-actions";
+        <section class="grid two">
+          <div class="card">
+            <div class="card-head">
+              <div>
+                <div class="card-title">المهام</div>
+                <div class="card-sub">Todo صغير</div>
+              </div>
+            </div>
 
-    const btnView = document.createElement("button");
-    btnView.className = "btn mini";
-    btnView.textContent = "عرض/تعديل";
-    btnView.onclick = () => openAssetEditor(asset.id);
+            <form class="todo" id="todoForm">
+              <input id="todoInput" placeholder="أضف مهمة..." />
+              <button class="btn primary" type="submit">إضافة</button>
+            </form>
 
-    const btnRemove = document.createElement("button");
-    btnRemove.className = "btn mini danger";
-    btnRemove.textContent = "حذف";
-    btnRemove.onclick = () => removeAsset(asset.id);
+            <div class="todo-list" id="todoList"></div>
+          </div>
 
-    acts.appendChild(btnView);
-    acts.appendChild(btnRemove);
+          <div class="card">
+            <div class="card-head">
+              <div>
+                <div class="card-title">ملاحظات</div>
+                <div class="card-sub">تُحفظ محليًا</div>
+              </div>
+              <div class="card-actions">
+                <button class="btn small danger" id="clearNotes">مسح</button>
+              </div>
+            </div>
 
-    row.appendChild(meta);
-    row.appendChild(acts);
-    filesList.appendChild(row);
-  });
-}
+            <textarea class="notes" id="notes" placeholder="اكتب ملاحظاتك هنا..."></textarea>
+          </div>
+        </section>
+      </section>
 
-function removeAsset(id){
-  state.assets = state.assets.filter(a => a.id !== id);
-  save();
-  renderFiles();
-  run();
-  setStatus("تم حذف الملف");
-}
+      <!-- Pages -->
+      <section class="page" id="page-analytics" hidden>
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">التحليلات</div>
+              <div class="card-sub">مكان تطوير التقارير</div>
+            </div>
+          </div>
+          <p class="p">أضف رسوم بيانية أو اربط API هنا.</p>
+        </div>
+      </section>
 
-function openAssetEditor(id){
-  const asset = state.assets.find(a => a.id === id);
-  if(!asset) return;
+      <section class="page" id="page-users" hidden>
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">المستخدمين</div>
+              <div class="card-sub">عرض تجريبي</div>
+            </div>
+          </div>
+          <p class="p">مثال: Admin / Editor / Viewer</p>
+        </div>
+      </section>
 
-  const newContent = prompt(
-    `تعديل محتوى الملف: ${asset.name}\n(انسخ/الصق وعدّل ثم OK)\nملاحظة: للمحتوى الطويل جدًا يفضل تصدير/استيراد مشروع.`,
-    asset.content
-  );
-  if(newContent === null) return;
-  asset.content = newContent;
-  save();
-  renderFiles();
-  run();
-  setStatus("تم تعديل الملف");
-}
+      <section class="page" id="page-orders" hidden>
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">الطلبات</div>
+              <div class="card-sub">توسعة صفحة الطلبات</div>
+            </div>
+          </div>
+          <p class="p">تقدر تنقل جدول “آخر الطلبات” وتكبره هنا.</p>
+        </div>
+      </section>
 
-/* =========================
-   Import code (into editor)
-========================= */
-async function readFileText(file){
-  return await file.text();
-}
+      <section class="page" id="page-settings" hidden>
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">الإعدادات</div>
+              <div class="card-sub">خيارات الحفظ</div>
+            </div>
+          </div>
 
-async function importCodeFile(file){
-  const text = await readFileText(file);
-  const type = extToType(file.name);
+          <div class="settings">
+            <label class="switch">
+              <input type="checkbox" id="autoSaveToggle" checked />
+              <span>حفظ محلي للملاحظات والمهام</span>
+            </label>
+          </div>
+        </div>
+      </section>
 
-  if(type === "js" || type === "css"){
-    state[type] = text;
-    save();
-    setActiveTab(type);
-    run();
-    setStatus(`تم استيراد ${file.name}`);
-    return;
-  }
-  if(file.name.toLowerCase().endsWith(".html") || file.name.toLowerCase().endsWith(".htm")){
-    state.html = text;
-    save();
-    setActiveTab("html");
-    run();
-    setStatus(`تم استيراد ${file.name}`);
-    return;
-  }
+      <footer class="footer">
+        <span>© Dark Code Dashboard</span>
+        <span class="sep">•</span>
+        <span>قالب جاهز للتعديل</span>
+      </footer>
+    </main>
+  </div>
 
-  const where = prompt("الملف TXT. تبيه يروح وين؟ اكتب: html أو css أو js", "html");
-  const w = (where || "html").toLowerCase().trim();
-  if(["html","css","js"].includes(w)){
-    state[w] = text;
-    save();
-    setActiveTab(w);
-    run();
-    setStatus(`تم استيراد ${file.name}`);
-  }else{
-    setStatus("تم إلغاء الاستيراد");
-  }
-}
+  <script>
+    const $ = (s)=>document.querySelector(s);
+    const $$ = (s)=>Array.from(document.querySelectorAll(s));
 
-/* =========================
-   Add assets (multiple files)
-========================= */
-async function addAssetFiles(fileList){
-  const files = Array.from(fileList || []);
-  for(const f of files){
-    const type = extToType(f.name);
-    const content = await readFileText(f);
+    function nowStr(){
+      const d = new Date();
+      return d.toLocaleString("ar-KW");
+    }
 
-    state.assets.push({
-      id: uid(),
-      name: f.name,
-      type,
-      content
+    // Time
+    $("#lastUpdate").textContent = nowStr();
+
+    // Random helpers (demo data)
+    function rnd(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+    // KPI
+    function refreshKPI(){
+      const sales = rnd(1200, 9200);
+      const visits = rnd(5000, 45000);
+      const orders = rnd(12, 190);
+      const tickets = rnd(0, 27);
+
+      $("#kpiSales").textContent = sales.toLocaleString("ar-KW") + " د.ك";
+      $("#kpiVisits").textContent = visits.toLocaleString("ar-KW");
+      $("#kpiOrders").textContent = orders.toLocaleString("ar-KW");
+      $("#kpiTickets").textContent = tickets.toLocaleString("ar-KW");
+
+      $("#kpiSalesDelta").textContent = rnd(1, 28);
+      $("#kpiVisitsDelta").textContent = rnd(1, 22);
+      $("#kpiOrdersToday").textContent = rnd(1, 35);
+    }
+    refreshKPI();
+
+    // Chart
+    const days = ["س", "ح", "ن", "ث", "ر", "خ", "ج"];
+    function renderChart(){
+      const bars = $("#bars");
+      const xlabels = $("#xlabels");
+      bars.innerHTML = "";
+      xlabels.innerHTML = "";
+
+      days.forEach(d=>{
+        const h = rnd(25, 100);
+        const bar = document.createElement("div");
+        bar.className = "bar";
+        bar.style.height = h + "%";
+        bars.appendChild(bar);
+
+        const lab = document.createElement("div");
+        lab.textContent = d;
+        xlabels.appendChild(lab);
+      });
+    }
+    renderChart();
+
+    $("#regenChart").addEventListener("click", ()=>{
+      renderChart();
+      refreshKPI();
+      $("#lastUpdate").textContent = nowStr();
     });
-  }
-  save();
-  if(activeTab === "files") renderFiles();
-  run();
-  setStatus("تمت إضافة الملفات");
-}
 
-/* =========================
-   Export/Import project JSON
-========================= */
-function downloadText(filename, text){
-  const blob = new Blob([text], {type:"application/json;charset=utf-8"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
+    // Orders
+    let orderId = 1042;
+    let orders = [
+      {id: 1001, name:"عبدالله", status:"مدفوع", amount: "45 د.ك"},
+      {id: 1002, name:"سارة", status:"قيد المعالجة", amount: "18 د.ك"},
+      {id: 1003, name:"خالد", status:"مرفوض", amount: "60 د.ك"},
+      {id: 1004, name:"نورة", status:"مدفوع", amount: "12 د.ك"},
+    ];
 
-function exportProject(){
-  const payload = JSON.stringify(state, null, 2);
-  const filename = `darkcode-project-${new Date().toISOString().slice(0,10)}.json`;
-  downloadText(filename, payload);
-  setStatus("تم تصدير المشروع");
-}
+    function badgeFor(status){
+      if(status === "مدفوع") return `<span class="badge ok">${status}</span>`;
+      if(status === "قيد المعالجة") return `<span class="badge wait">${status}</span>`;
+      return `<span class="badge no">${status}</span>`;
+    }
 
-async function importProjectFile(file){
-  const text = await readFileText(file);
-  try{
-    const parsed = JSON.parse(text);
-    if(!parsed || typeof parsed !== "object") throw new Error("bad");
-    state = {
-      html: parsed.html ?? "",
-      css: parsed.css ?? "",
-      js: parsed.js ?? "",
-      assets: Array.isArray(parsed.assets) ? parsed.assets : []
-    };
-    save();
-    setActiveTab("html");
-    run();
-    setStatus("تم استيراد المشروع");
-  }catch{
-    setStatus("ملف المشروع غير صالح");
-  }
-}
+    function renderOrders(){
+      const host = $("#ordersTable");
+      host.innerHTML = "";
+      orders.slice().reverse().slice(0,6).forEach(o=>{
+        const row = document.createElement("div");
+        row.className = "trow";
+        row.innerHTML = `
+          <div>${o.id}</div>
+          <div>${o.name}</div>
+          <div>${badgeFor(o.status)}</div>
+          <div>${o.amount}</div>
+        `;
+        host.appendChild(row);
+      });
+    }
+    renderOrders();
 
-/* =========================
-   Help modal
-========================= */
-function openHelp(){
-  helpBackdrop.classList.add("open");
-  helpBackdrop.setAttribute("aria-hidden","false");
-  setStatus("تم فتح الأدوات");
-}
-function closeHelp(){
-  helpBackdrop.classList.remove("open");
-  helpBackdrop.setAttribute("aria-hidden","true");
-  setStatus("تم إغلاق الأدوات");
-}
-document.getElementById("btnHelp").addEventListener("click", openHelp);
-btnCloseHelp.addEventListener("click", closeHelp);
-helpBackdrop.addEventListener("click", (e)=>{
-  if(e.target === helpBackdrop) closeHelp();
-});
+    $("#addOrder").addEventListener("click", ()=>{
+      orderId++;
+      const st = ["مدفوع","قيد المعالجة","مرفوض"][rnd(0,2)];
+      orders.push({
+        id: orderId,
+        name: ["علي","فاطمة","محمد","ريم","يوسف"][rnd(0,4)],
+        status: st,
+        amount: `${rnd(8,120)} د.ك`
+      });
+      renderOrders();
+      $("#lastUpdate").textContent = nowStr();
+    });
 
-/* =========================
-   Snippets (Many)
-========================= */
-const SNIPPETS = {
-  // HTML
-  "html-basic": `<!doctype html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>صفحة</title>
-</head>
-<body>
-  <h1>عنوان الصفحة</h1>
-  <p>نص بسيط</p>
-</body>
-</html>`,
-  "html-hero": `<section class="hero">
-  <div class="hero__content">
-    <h1>عنوان قوي</h1>
-    <p>وصف مختصر يجذب المستخدم.</p>
-    <div class="hero__actions">
-      <button class="btn primary" id="cta">ابدأ الآن</button>
-      <a class="link" href="#">تعرف أكثر</a>
-    </div>
-  </div>
-</section>`,
-  "html-card": `<div class="card">
-  <h2>Card</h2>
-  <p>هذا مثال بطاقة بسيطة.</p>
-  <button id="btn">زر</button>
-</div>`,
-  "html-navbar": `<nav class="nav">
-  <div class="nav__brand">DarkCode</div>
-  <div class="nav__links">
-    <a href="#">الرئيسية</a>
-    <a href="#">الخدمات</a>
-    <a href="#">تواصل</a>
-  </div>
-  <button class="nav__btn" id="menuBtn">القائمة</button>
-</nav>`,
-  "html-grid": `<div class="grid">
-  <div class="item">عنصر 1</div>
-  <div class="item">عنصر 2</div>
-  <div class="item">عنصر 3</div>
-  <div class="item">عنصر 4</div>
-</div>`,
-  "html-form": `<form class="form" id="form">
-  <label>الاسم</label>
-  <input type="text" placeholder="اكتب اسمك" required>
-  <label>البريد</label>
-  <input type="email" placeholder="name@email.com" required>
-  <label>رسالتك</label>
-  <textarea rows="4" placeholder="اكتب الرسالة" required></textarea>
-  <button type="submit">إرسال</button>
-</form>`,
-  "html-modal": `<button id="openModal">افتح النافذة</button>
+    // Todo + Notes local save
+    const LS_TODO = "dc.dashboard.todo";
+    const LS_NOTES = "dc.dashboard.notes";
+    const LS_AUTOSAVE = "dc.dashboard.autosave";
 
-<div class="modal" id="modal" hidden>
-  <div class="modal__overlay" data-close></div>
-  <div class="modal__box">
-    <h3>نافذة</h3>
-    <p>محتوى النافذة هنا.</p>
-    <button data-close>إغلاق</button>
-  </div>
-</div>`,
-  "html-table": `<table class="table">
-  <thead>
-    <tr><th>الاسم</th><th>العمر</th><th>المدينة</th></tr>
-  </thead>
-  <tbody>
-    <tr><td>أحمد</td><td>22</td><td>الكويت</td></tr>
-    <tr><td>سارة</td><td>25</td><td>الرياض</td></tr>
-  </tbody>
-</table>`,
-  "html-footer": `<footer class="footer">
-  <p>© <span id="year"></span> DarkCode</p>
-</footer>`,
-  "html-badge": `<div class="badges">
-  <span class="badge">جديد</span>
-  <span class="badge badge--ok">جاهز</span>
-  <span class="badge badge--warn">تنبيه</span>
-</div>`,
-  "html-tabs": `<div class="tabs">
-  <div class="tabs__bar">
-    <button class="tabbtn active" data-tab="t1">تبويب 1</button>
-    <button class="tabbtn" data-tab="t2">تبويب 2</button>
-    <button class="tabbtn" data-tab="t3">تبويب 3</button>
-  </div>
-  <div class="tabs__content">
-    <div class="tabpane" id="t1">محتوى 1</div>
-    <div class="tabpane" id="t2" hidden>محتوى 2</div>
-    <div class="tabpane" id="t3" hidden>محتوى 3</div>
-  </div>
-</div>`,
-  "html-toast": `<div class="toast" id="toast" hidden>
-  <span id="toastText">تم!</span>
-</div>
-<button id="showToast">أظهر Toast</button>`,
+    let autoSave = (localStorage.getItem(LS_AUTOSAVE) ?? "1") === "1";
+    const autoSaveToggle = $("#autoSaveToggle");
+    autoSaveToggle.checked = autoSave;
 
-  // CSS
-  "css-reset": `*{box-sizing:border-box}
-body{margin:0; font-family:system-ui; line-height:1.6}`,
-  "css-center": `body{
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:20px;
-}`,
-  "css-dark": `:root{
-  --bg:#0b1220; --card:rgba(255,255,255,.04); --b:rgba(255,255,255,.12);
-  --txt:#e5e7eb;
-}
-body{background:var(--bg); color:var(--txt);}`,
-  "css-card": `.card{
-  width:min(520px, 100%);
-  border:1px solid rgba(0,0,0,.12);
-  border-radius:16px;
-  padding:16px;
-  background:white;
-  box-shadow: 0 12px 30px rgba(0,0,0,.12);
-}`,
-  "css-grid": `.grid{
-  display:grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap:12px;
-}
-.item{
-  border:1px solid rgba(0,0,0,.12);
-  border-radius:14px;
-  padding:14px;
-  background:white;
-}
+    autoSaveToggle.addEventListener("change", (e)=>{
+      autoSave = e.target.checked;
+      localStorage.setItem(LS_AUTOSAVE, autoSave ? "1" : "0");
+      if(autoSave){
+        saveTodos();
+        saveNotes();
+      }
+    });
 
-:root{
-  --bg:#0b0f14;
-  --panel:#0f1621;
-  --panel2:#0c121b;
-  --text:#e6eefc;
-  --muted:#9bb0d0;
-  --border:rgba(255,255,255,.10);
-  --accent:#3b82f6;
-  --accent2:#8b5dff;
-  --danger:#ff5d7a;
-  --shadow: 0 18px 50px rgba(0,0,0,.55);
-  --radius:18px;
-}
+    let todos = [];
+    function loadTodos(){
+      try{
+        const raw = localStorage.getItem(LS_TODO);
+        if(raw) todos = JSON.parse(raw) || [];
+      }catch{ todos = []; }
+    }
+    function saveTodos(){
+      if(!autoSave) return;
+      localStorage.setItem(LS_TODO, JSON.stringify(todos));
+    }
 
-*{box-sizing:border-box}
-body{
-  margin:0;
-  background:
-    radial-gradient(900px 500px at 15% 10%, rgba(59,130,246,.14), transparent 60%),
-    radial-gradient(900px 500px at 85% 15%, rgba(139,93,255,.12), transparent 55%),
-    var(--bg);
-  color:var(--text);
-}
+    function renderTodos(){
+      const host = $("#todoList");
+      host.innerHTML = "";
+      if(todos.length === 0){
+        const empty = document.createElement("div");
+        empty.className = "p";
+        empty.textContent = "لا توجد مهام بعد.";
+        host.appendChild(empty);
+        return;
+      }
+      todos.forEach((t, idx)=>{
+        const row = document.createElement("div");
+        row.className = "todo-item";
+        row.innerHTML = `
+          <div>${t}</div>
+          <button data-del="${idx}">حذف</button>
+        `;
+        host.appendChild(row);
+      });
 
-.app{
-  min-height:100vh;
-  display:grid;
-  grid-template-columns: 280px 1fr;
-}
+      host.querySelectorAll("[data-del]").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          const i = Number(btn.getAttribute("data-del"));
+          todos.splice(i,1);
+          saveTodos();
+          renderTodos();
+        });
+      });
+    }
 
-.sidebar{
-  border-left:1px solid var(--border);
-  background: rgba(255,255,255,.03);
-  display:flex;
-  flex-direction:column;
-  gap:14px;
-  padding:14px;
-  position:sticky;
-  top:0;
-  height:100vh;
-}
+    loadTodos();
+    renderTodos();
 
-.brand{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding:10px;
-  border:1px solid var(--border);
-  background: rgba(0,0,0,.18);
-  border-radius: 16px;
-}
-.brand-badge{
-  width:40px;height:40px;border-radius:14px;
-  display:flex;align-items:center;justify-content:center;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-  color:#fff;font-weight:900;
-}
-.brand-title{font-weight:900}
-.brand-sub{font-size:12px;color:var(--muted)}
-
-.nav{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-}
-.nav-item{
-  border:1px solid var(--border);
-  background: rgba(0,0,0,.16);
-  color:var(--text);
-  padding:10px 12px;
-  border-radius:14px;
-  cursor:pointer;
-  text-align:right;
-}
-.nav-item.active{
-  border-color: rgba(59,130,246,.5);
-  background: rgba(59,130,246,.16);
-}
-
-.sidebar-footer{
-  margin-top:auto;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-.mini-card{
-  border:1px solid var(--border);
-  background: rgba(0,0,0,.16);
-  border-radius:16px;
-  padding:10px;
-}
-.mini-title{font-size:12px;color:var(--muted); margin-bottom:8px;}
-.mini-row{display:flex; gap:8px; align-items:center;}
-.dot{width:10px;height:10px;border-radius:50%;}
-.dot.ok{background:#22c55e;}
-
-.content{
-  padding:14px;
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-  min-width:0;
-}
-
-.top{
-  display:flex;
-  justify-content:space-between;
-  gap:12px;
-  align-items:center;
-  padding:12px 14px;
-  border:1px solid var(--border);
-  background: rgba(255,255,255,.03);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-}
-.top-left{
-  display:flex;
-  gap:12px;
-  align-items:center;
-}
-.icon-btn{
-  width:42px;height:42px;
-  border-radius:14px;
-  border:1px solid var(--border);
-  background: rgba(0,0,0,.16);
-  color:var(--text);
-  cursor:pointer;
-  font-size:16px;
-}
-.page-title{font-weight:900}
-.page-sub{font-size:12px;color:var(--muted)}
-
-.top-right{display:flex; gap:10px; align-items:center;}
-.search{
-  display:flex; gap:8px; align-items:center;
-  border:1px solid var(--border);
-  background: rgba(0,0,0,.16);
-  border-radius: 16px;
-  padding:8px;
-}
-.search input{
-  width:min(260px, 42vw);
-  border:0;
-  outline:0;
-  background: transparent;
-  color: var(--text);
-}
-.btn{
-  border:1px solid var(--border);
-  background: rgba(255,255,255,.04);
-  color: var(--text);
-  padding:9px 10px;
-  border-radius: 14px;
-  cursor:pointer;
-}
-.btn.primary{
-  border-color: rgba(59,130,246,.5);
-  background: rgba(59,130,246,.18);
-}
-.btn.ghost{
-  background: transparent;
-}
-.btn.small{padding:7px 10px; font-size:12px;}
-.btn.danger{
-  border-color: rgba(255,93,122,.35);
-  background: rgba(255,93,122,.12);
-}
-
-.avatar{
-  width:40px;height:40px;border-radius:14px;
-  display:flex;align-items:center;justify-content:center;
-  border:1px solid var(--border);
-  background: rgba(0,0,0,.18);
-  font-weight:900;
-}
-
-.grid{
-  display:grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap:12px;
-  min-width:0;
-}
-.grid.two{grid-template-columns: 1.2fr .8fr;}
-
-.card{
-  border:1px solid var(--border);
-  background: rgba(255,255,255,.03);
-  border-radius: var(--radius);
-  padding:12px;
-  box-shadow: var(--shadow);
-  min-width:0;
-}
-.card-head{
-  display:flex;
-  justify-content:space-between;
-  gap:10px;
-  align-items:flex-start;
-  margin-bottom:12px;
-}
-.card-title{font-weight:900}
-.card-sub{font-size:12px;color:var(--muted)}
-
-.kpi-title{font-size:12px;color:var(--muted)}
-.kpi-value{font-size:26px;font-weight:900;margin-top:6px}
-.kpi-sub{font-size:12px;color:var(--muted); margin-top:6px;}
-.pill{
-  display:inline-flex;
-  padding:2px 8px;
-  border-radius:999px;
-  border:1px solid var(--border);
-  background: rgba(59,130,246,.10);
-  margin-left:6px;
-}
-
-.chart{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-.bars{
-  height:140px;
-  display:grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap:10px;
-  align-items:end;
-}
-.bar{
-  border-radius: 14px;
-  border:1px solid var(--border);
-  background: linear-gradient(180deg, rgba(59,130,246,.30), rgba(139,93,255,.18));
-}
-.xlabels{
-  display:grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap:10px;
-  color:var(--muted);
-  font-size:12px;
-  text-align:center;
-}
-
-.table{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-}
-.trow{
-  display:grid;
-  grid-template-columns: 60px 1fr 120px 120px;
-  gap:10px;
-  align-items:center;
-  padding:10px;
-  border:1px solid var(--border);
-  background: rgba(0,0,0,.16);
-  border-radius: 14px;
-  font-size:12px;
-}
-.thead{background: rgba(59,130,246,.10);}
-
-.badge{
-  display:inline-flex;
-  padding:4px 8px;
-  border-radius: 999px;
-  border:1px solid var(--border);
-  font-size:12px;
-}
-.badge.ok{background: rgba(34,197,94,.14); border-color: rgba(34,197,94,.35);}
-.badge.wait{background: rgba(245,158,11,.14); border-color: rgba(245,158,11,.35);}
-.badge.no{background: rgba(255,93,122,.12); border-color: rgba(255,93,122,.28);}
-
-.todo{
-  display:flex;
-  gap:8px;
-}
-.todo input{
-  flex:1;
-  border:1px solid var(--border);
-  background: rgba(0,0,0,.16);
-  color: var(--text);
-  border-radius:14px;
-  padding:10px 12px;
-  outline:0;
-}
-.todo-list{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  margin-top:10px;
-}
-.todo-item{
-  display:flex;
-  justify-content:space-between;
-  gap:10px;
-  align-items:center;
-  padding:10px;
-  border:1px solid var(--border);
-  background: rgba(0,0,0,.16);
-  border-radius: 14px;
-  font-size:12px;
-}
-.todo-item button{
-  border:1px solid var(--border);
-  background: transparent;
-  color:var(--text);
-  border-radius: 12px;
-  padding:7px 9px;
-  cursor:pointer;
-}
-
-.notes{
-  width:100%;
-  min-height: 160px;
-  border:1px solid var(--border);
-  background: rgba(0,0,0,.16);
-  color: var(--text);
-  border-radius: 14px;
-  padding:12px;
-  outline:0;
-  resize: vertical;
-}
-
-.tags{display:flex; gap:8px; flex-wrap:wrap;}
-.tag{
-  padding:6px 10px;
-  border-radius:999px;
-  border:1px solid var(--border);
-  background: rgba(255,255,255,.04);
-  font-size:12px;
-}
-
-.p{margin:0; color:var(--muted); line-height:1.7}
-
-.settings{display:flex; flex-direction:column; gap:10px;}
-.switch{display:flex; gap:10px; align-items:center; color:var(--muted); font-size:12px;}
-.switch input{accent-color: var(--accent);}
-
-.footer{
-  padding:10px 6px;
-  color:var(--muted);
-  font-size:12px;
-  display:flex;
-  gap:10px;
-  justify-content:center;
-}
-.sep{opacity:.5}
-
-/* Responsive */
-@media (max-width: 1100px){
-  .grid{grid-template-columns: repeat(2, 1fr);}
-  .grid.two{grid-template-columns: 1fr;}
-}
-@media (max-width: 720px){
-  .app{grid-template-columns: 1fr;}
-  .sidebar{position:fixed; right:0; top:0; bottom:0; width: 86vw; max-width:320px; transform: translateX(110%); transition: .2s ease; z-index:50;}
-  .sidebar.open{transform: translateX(0);}
-}
-
-@media (max-width: 900px){
-  .grid{grid-template-columns: repeat(2, 1fr);}
-}
-@media (max-width: 520px){
-  .grid{grid-template-columns: 1fr;}
-}`,
-  "css-buttons": `.btn{padding:10px 12px; border-radius:12px; border:1px solid rgba(0,0,0,.12); cursor:pointer}
-.btn.primary{background:#2563eb; color:#fff; border-color:#2563eb}
-.link{color:#2563eb; text-decoration:none}`,
-  "css-form": `.form{display:grid; gap:10px; width:min(420px,100%)}
-.form input,.form textarea{
-  border:1px solid rgba(0,0,0,.14);
-  border-radius:12px;
-  padding:10px 12px;
-  outline:none;
-}
-.form button{
-  border:0; border-radius:12px; padding:10px 12px;
-  background:#2563eb; color:#fff; cursor:pointer;
-}`,
-  "css-modal": `.modal{position:fixed; inset:0}
-.modal__overlay{position:absolute; inset:0; background:rgba(0,0,0,.5)}
-.modal__box{
-  position:relative;
-  width:min(520px, 92vw);
-  margin: 12vh auto;
-  background:white;
-  border-radius:16px;
-  padding:16px;
-}`,
-  "css-anim": `@keyframes pop{from{transform:translateY(6px); opacity:0}to{transform:translateY(0); opacity:1}}
-.hero__content, .card, .modal__box { animation: pop .18s ease-out; }`,
-  "css-shadow": `.shadow-sm{box-shadow:0 6px 16px rgba(0,0,0,.10)}
-.shadow-lg{box-shadow:0 18px 60px rgba(0,0,0,.18)}`,
-
-  // JS
-  "js-click": `document.getElementById("btn")?.addEventListener("click", ()=>{
-  alert("تم الضغط!");
-});`,
-  "js-tabs": `document.querySelectorAll(".tabbtn").forEach(btn=>{
-  btn.addEventListener("click", ()=>{
-    document.querySelectorAll(".tabbtn").forEach(b=>b.classList.remove("active"));
-    btn.classList.add("active");
-
-    const id = btn.dataset.tab;
-    document.querySelectorAll(".tabpane").forEach(p=> p.hidden = (p.id !== id));
-  });
-});`,
-  "js-modal": `const modal = document.getElementById("modal");
-document.getElementById("openModal")?.addEventListener("click", ()=>{
-  modal.hidden = false;
-});
-modal?.addEventListener("click", (e)=>{
-  if(e.target?.hasAttribute("data-close")) modal.hidden = true;
-});`,
-  "js-toast": `const toast = document.getElementById("toast");
-const toastText = document.getElementById("toastText");
-function showToast(msg="تم!"){
-  toastText.textContent = msg;
-  toast.hidden = false;
-  setTimeout(()=> toast.hidden = true, 1400);
-}
-document.getElementById("showToast")?.addEventListener("click", ()=> showToast("اشتغل!"));`,
-  "js-localstorage": `// حفظ قيمة
-localStorage.setItem("key", "value");
-// قراءة قيمة
-console.log(localStorage.getItem("key"));`,
-  "js-fetch": `async function load(){
-  const res = await fetch("https://jsonplaceholder.typicode.com/todos/1");
-  const data = await res.json();
-  console.log(data);
-}
-load();`,
-  "js-debounce": `function debounce(fn, wait=250){
-  let t;
-  return (...args)=>{
-    clearTimeout(t);
-    t = setTimeout(()=> fn(...args), wait);
-  };
-}`,
-  "js-theme": `const btn = document.createElement("button");
-btn.textContent = "بدّل الثيم";
-document.body.prepend(btn);
-let dark = false;
-btn.addEventListener("click", ()=>{
-  dark = !dark;
-  document.body.style.background = dark ? "#0b1220" : "#ffffff";
-  document.body.style.color = dark ? "#e5e7eb" : "#111827";
-});`,
-  "js-copy": `async function copyText(text){
-  await navigator.clipboard.writeText(text);
-  alert("تم النسخ");
-}`
-};
-
-function ensureEditorTab(){
-  if(activeTab === "files"){
-    setStatus("ارجع لتبويب HTML/CSS/JS أولاً");
-    return false;
-  }
-  return true;
-}
-
-function insertAtSelection(text){
-  const start = codeArea.selectionStart ?? codeArea.value.length;
-  const end = codeArea.selectionEnd ?? codeArea.value.length;
-  const before = codeArea.value.slice(0, start);
-  const after = codeArea.value.slice(end);
-
-  const needsSpace = before && !before.endsWith("\n");
-  const insert = needsSpace ? "\n\n" + text : text;
-
-  const final = before + insert + "\n\n" + after;
-  codeArea.value = final;
-
-  // put cursor after inserted text
-  const newPos = (before + insert + "\n\n").length;
-  codeArea.selectionStart = codeArea.selectionEnd = newPos;
-
-  commitEditorToState();
-  scheduleRun();
-}
-
-function insertSnippet(key){
-  if(!ensureEditorTab()) return;
-  const text = SNIPPETS[key];
-  if(!text) return;
-  insertAtSelection(text);
-  setStatus("تم إدخال كود جاهز");
-}
-
-  const $ = (s)=>document.querySelector(s);
-const $$ = (s)=>Array.from(document.querySelectorAll(s));
-
-function nowStr(){
-  const d = new Date();
-  return d.toLocaleString("ar-KW");
-}
-
-$("#lastUpdate").textContent = nowStr();
-
-function rnd(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
-
-// KPI data
-function refreshKPI(){
-  const sales = rnd(1200, 9200);
-  const visits = rnd(5000, 45000);
-  const orders = rnd(12, 190);
-  const tickets = rnd(0, 27);
-
-  $("#kpiSales").textContent = sales.toLocaleString("ar-KW") + " د.ك";
-  $("#kpiVisits").textContent = visits.toLocaleString("ar-KW");
-  $("#kpiOrders").textContent = orders.toLocaleString("ar-KW");
-  $("#kpiTickets").textContent = tickets.toLocaleString("ar-KW");
-
-  $("#kpiSalesDelta").textContent = rnd(1, 28);
-  $("#kpiVisitsDelta").textContent = rnd(1, 22);
-  $("#kpiOrdersToday").textContent = rnd(1, 35);
-}
-refreshKPI();
-
-// Simple bar chart
-const days = ["س", "ح", "ن", "ث", "ر", "خ", "ج"];
-function renderChart(){
-  const bars = $("#bars");
-  const xlabels = $("#xlabels");
-  bars.innerHTML = "";
-  xlabels.innerHTML = "";
-
-  days.forEach(d=>{
-    const h = rnd(25, 100);
-    const bar = document.createElement("div");
-    bar.className = "bar";
-    bar.style.height = h + "%";
-    bars.appendChild(bar);
-
-    const lab = document.createElement("div");
-    lab.textContent = d;
-    xlabels.appendChild(lab);
-  });
-}
-renderChart();
-
-$("#regenChart").addEventListener("click", ()=>{
-  renderChart();
-  $("#lastUpdate").textContent = nowStr();
-});
-
-// Orders table
-let orderId = 1042;
-let orders = [
-  {id: 1001, name:"عبدالله", status:"مدفوع", amount: "45 د.ك"},
-  {id: 1002, name:"سارة", status:"قيد المعالجة", amount: "18 د.ك"},
-  {id: 1003, name:"خالد", status:"مرفوض", amount: "60 د.ك"},
-  {id: 1004, name:"نورة", status:"مدفوع", amount: "12 د.ك"},
-];
-
-function badgeFor(status){
-  if(status === "مدفوع") return `<span class="badge ok">${status}</span>`;
-  if(status === "قيد المعالجة") return `<span class="badge wait">${status}</span>`;
-  return `<span class="badge no">${status}</span>`;
-}
-
-function renderOrders(){
-  const host = $("#ordersTable");
-  host.innerHTML = "";
-  orders.slice().reverse().slice(0,6).forEach(o=>{
-    const row = document.createElement("div");
-    row.className = "trow";
-    row.innerHTML = `
-      <div>${o.id}</div>
-      <div>${o.name}</div>
-      <div>${badgeFor(o.status)}</div>
-      <div>${o.amount}</div>
-    `;
-    host.appendChild(row);
-  });
-}
-renderOrders();
-
-$("#addOrder").addEventListener("click", ()=>{
-  orderId++;
-  const st = ["مدفوع","قيد المعالجة","مرفوض"][rnd(0,2)];
-  orders.push({id: orderId, name: ["علي","فاطمة","محمد","ريم","يوسف"][rnd(0,4)], status: st, amount: `${rnd(8,120)} د.ك`});
-  renderOrders();
-});
-
-// Todo + Notes local save
-const LS_TODO = "dc.todo";
-const LS_NOTES = "dc.notes";
-const LS_AUTOSAVE = "dc.autosave";
-
-let autoSave = (localStorage.getItem(LS_AUTOSAVE) ?? "1") === "1";
-$("#autoSaveToggle").checked = autoSave;
-
-$("#autoSaveToggle").addEventListener("change", (e)=>{
-  autoSave = e.target.checked;
-  localStorage.setItem(LS_AUTOSAVE, autoSave ? "1" : "0");
-});
-
-let todos = [];
-function saveTodos(){ if(autoSave) localStorage.setItem(LS_TODO, JSON.stringify(todos)); }
-function loadTodos(){
-  try{
-    const raw = localStorage.getItem(LS_TODO);
-    if(raw) todos = JSON.parse(raw) || [];
-  }catch{ todos = []; }
-}
-loadTodos();
-
-function renderTodos(){
-  const host = $("#todoList");
-  host.innerHTML = "";
-  if(todos.length === 0){
-    const empty = document.createElement("div");
-    empty.className = "p";
-    empty.textContent = "لا توجد مهام بعد.";
-    host.appendChild(empty);
-    return;
-  }
-  todos.forEach((t, idx)=>{
-    const row = document.createElement("div");
-    row.className = "todo-item";
-    row.innerHTML = `
-      <div>${t}</div>
-      <button data-del="${idx}">حذف</button>
-    `;
-    host.appendChild(row);
-  });
-
-  host.querySelectorAll("[data-del]").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      const i = Number(btn.getAttribute("data-del"));
-      todos.splice(i,1);
+    $("#todoForm").addEventListener("submit", (e)=>{
+      e.preventDefault();
+      const v = $("#todoInput").value.trim();
+      if(!v) return;
+      todos.push(v);
+      $("#todoInput").value = "";
       saveTodos();
       renderTodos();
     });
-  });
-}
-renderTodos();
 
-$("#todoForm").addEventListener("submit", (e)=>{
-  e.preventDefault();
-  const v = $("#todoInput").value.trim();
-  if(!v) return;
-  todos.push(v);
-  $("#todoInput").value = "";
-  saveTodos();
-  renderTodos();
-});
-
-const notes = $("#notes");
-function loadNotes(){
-  notes.value = autoSave ? (localStorage.getItem(LS_NOTES) || "") : "";
-}
-loadNotes();
-
-notes.addEventListener("input", ()=>{
-  if(!autoSave) return;
-  localStorage.setItem(LS_NOTES, notes.value);
-});
-
-$("#clearNotes").addEventListener("click", ()=>{
-  notes.value = "";
-  localStorage.removeItem(LS_NOTES);
-});
-
-// Navigation pages
-function showPage(name){
-  const map = {
-    overview: null,
-    analytics: $("#page-analytics"),
-    users: $("#page-users"),
-    orders: $("#page-orders"),
-    settings: $("#page-settings")
-  };
-
-  // hide all
-  ["analytics","users","orders","settings"].forEach(k=> map[k].hidden = true);
-
-  // show selected
-  if(name !== "overview"){
-    map[name].hidden = false;
-  }
-
-  const titles = {
-    overview: "نظرة عامة",
-    analytics: "التحليلات",
-    users: "المستخدمين",
-    orders: "الطلبات",
-    settings: "الإعدادات"
-  };
-  $("#pageTitle").textContent = titles[name] || "نظرة عامة";
-
-  $$(".nav-item").forEach(b=> b.classList.toggle("active", b.dataset.page === name));
-  $("#lastUpdate").textContent = nowStr();
-}
-
-$$(".nav-item").forEach(btn=>{
-  btn.addEventListener("click", ()=> showPage(btn.dataset.page));
-});
-
-// Sidebar toggle (mobile)
-const sidebar = document.querySelector(".sidebar");
-$("#toggleSidebar").addEventListener("click", ()=>{
-  sidebar.classList.toggle("open");
-});
-
-// Theme toggle
-let dark = true;
-$("#toggleTheme").addEventListener("click", ()=>{
-  dark = !dark;
-  document.documentElement.style.setProperty("--bg", dark ? "#0b0f14" : "#f7fafc");
-  document.documentElement.style.setProperty("--text", dark ? "#e6eefc" : "#0b1220");
-  document.documentElement.style.setProperty("--muted", dark ? "#9bb0d0" : "#334155");
-  document.documentElement.style.setProperty("--border", dark ? "rgba(255,255,255,.10)" : "rgba(15,23,42,.12)");
-});
-
-// Search (demo)
-$("#searchBtn").addEventListener("click", ()=>{
-  const q = $("#searchInput").value.trim();
-  if(!q) return;
-  alert("بحث تجريبي عن: " + q);
-});
-
-showPage("overview");
-
-
-document.querySelectorAll("[data-snippet]").forEach(el=>{
-  el.addEventListener("click", ()=>{
-    insertSnippet(el.getAttribute("data-snippet"));
-  });
-});
-
-/* =========================
-   Editor Tools
-========================= */
-function getSelection(){
-  return {
-    start: codeArea.selectionStart ?? 0,
-    end: codeArea.selectionEnd ?? 0,
-    value: codeArea.value
-  };
-}
-
-function getLineRangeAt(pos){
-  const v = codeArea.value;
-  let s = pos, e = pos;
-  while(s > 0 && v[s-1] !== "\n") s--;
-  while(e < v.length && v[e] !== "\n") e++;
-  return { s, e };
-}
-
-function replaceRange(s, e, replacement){
-  const v = codeArea.value;
-  codeArea.value = v.slice(0, s) + replacement + v.slice(e);
-  codeArea.selectionStart = s;
-  codeArea.selectionEnd = s + replacement.length;
-  commitEditorToState();
-  scheduleRun();
-}
-
-function toolToggleComment(){
-  if(!ensureEditorTab()) return;
-  const { start, end, value } = getSelection();
-
-  const hasSel = end > start;
-  if(!hasSel){
-    const lr = getLineRangeAt(start);
-    const line = value.slice(lr.s, lr.e);
-
-    if(activeTab === "css"){
-      // /* ... */
-      const trimmed = line.trim();
-      const isCommented = trimmed.startsWith("/*") && trimmed.endsWith("*/");
-      const next = isCommented ? line.replace("/*","").replace("*/","") : `/*${line}*/`;
-      replaceRange(lr.s, lr.e, next);
-      setStatus("تم (تعليق/فك تعليق) السطر");
-      return;
+    const notes = $("#notes");
+    function loadNotes(){
+      notes.value = autoSave ? (localStorage.getItem(LS_NOTES) || "") : "";
     }
+    function saveNotes(){
+      if(!autoSave) return;
+      localStorage.setItem(LS_NOTES, notes.value);
+    }
+    loadNotes();
 
-    // js/html: use //
-    const trimmed = line.trimStart();
-    const indent = line.slice(0, line.length - trimmed.length);
-    const isCommented = trimmed.startsWith("//");
-    const next = isCommented ? indent + trimmed.replace(/^\/\/\s?/, "") : indent + "// " + trimmed;
-    replaceRange(lr.s, lr.e, next);
-    setStatus("تم (تعليق/فك تعليق) السطر");
-    return;
-  }
+    notes.addEventListener("input", saveNotes);
 
-  // selection: line-based
-  const chunk = value.slice(start, end);
-  const lines = chunk.split("\n");
-
-  if(activeTab === "css"){
-    const allCommented = lines.every(l => l.trim().startsWith("/*") && l.trim().endsWith("*/"));
-    const nextLines = lines.map(l=>{
-      const t = l.trim();
-      if(allCommented){
-        if(t.startsWith("/*") && t.endsWith("*/")){
-          return l.replace("/*","").replace("*/","");
-        }
-        return l;
-      }
-      return `/*${l}*/`;
+    $("#clearNotes").addEventListener("click", ()=>{
+      notes.value = "";
+      localStorage.removeItem(LS_NOTES);
     });
-    replaceRange(start, end, nextLines.join("\n"));
-    setStatus("تم (تعليق/فك تعليق) التحديد");
-    return;
-  }
 
-  const allCommented = lines.every(l => l.trimStart().startsWith("//") || l.trim() === "");
-  const nextLines = lines.map(l=>{
-    if(l.trim() === "") return l;
-    const trimmed = l.trimStart();
-    const indent = l.slice(0, l.length - trimmed.length);
-    if(allCommented){
-      return indent + trimmed.replace(/^\/\/\s?/, "");
+    // Navigation pages
+    function showPage(name){
+      const overview = $("#overviewSection");
+      const pages = {
+        analytics: $("#page-analytics"),
+        users: $("#page-users"),
+        orders: $("#page-orders"),
+        settings: $("#page-settings")
+      };
+
+      // hide all pages
+      Object.values(pages).forEach(p => p.hidden = true);
+      // show overview by default
+      overview.hidden = false;
+
+      if(name !== "overview"){
+        overview.hidden = true;
+        pages[name].hidden = false;
+      }
+
+      const titles = {
+        overview: "نظرة عامة",
+        analytics: "التحليلات",
+        users: "المستخدمين",
+        orders: "الطلبات",
+        settings: "الإعدادات"
+      };
+
+      $("#pageTitle").textContent = titles[name] || "نظرة عامة";
+      $$(".nav-item").forEach(b => b.classList.toggle("active", b.dataset.page === name));
+      $("#lastUpdate").textContent = nowStr();
     }
-    return indent + "// " + trimmed;
-  });
-  replaceRange(start, end, nextLines.join("\n"));
-  setStatus("تم (تعليق/فك تعليق) التحديد");
-}
 
-function toolDuplicate(){
-  if(!ensureEditorTab()) return;
-  const { start, end, value } = getSelection();
-  if(end > start){
-    const chunk = value.slice(start, end);
-    replaceRange(end, end, chunk);
-    codeArea.selectionStart = start;
-    codeArea.selectionEnd = end;
-    setStatus("تم تكرار التحديد");
-    return;
-  }
-  const lr = getLineRangeAt(start);
-  const line = value.slice(lr.s, lr.e);
-  const insert = "\n" + line;
-  replaceRange(lr.e, lr.e, insert);
-  setStatus("تم تكرار السطر");
-}
+    $$(".nav-item").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        showPage(btn.dataset.page);
+        // close sidebar on mobile
+        $("#sidebar").classList.remove("open");
+      });
+    });
 
-function toolDeleteLine(){
-  if(!ensureEditorTab()) return;
-  const { start, value } = getSelection();
-  const lr = getLineRangeAt(start);
+    showPage("overview");
 
-  // include following newline if exists
-  let e = lr.e;
-  if(e < value.length && value[e] === "\n") e++;
-  replaceRange(lr.s, e, "");
-  setStatus("تم حذف السطر");
-}
+    // Sidebar toggle (mobile)
+    $("#toggleSidebar").addEventListener("click", ()=>{
+      $("#sidebar").classList.toggle("open");
+    });
 
-function toolMoveLine(dir){ // -1 up, +1 down
-  if(!ensureEditorTab()) return;
-  const v = codeArea.value;
-  const pos = codeArea.selectionStart ?? 0;
+    // Theme toggle (dark/light simple)
+    let dark = true;
+    $("#toggleTheme").addEventListener("click", ()=>{
+      dark = !dark;
+      document.documentElement.style.setProperty("--bg", dark ? "#0b0f14" : "#f7fafc");
+      document.documentElement.style.setProperty("--text", dark ? "#e6eefc" : "#0b1220");
+      document.documentElement.style.setProperty("--muted", dark ? "#9bb0d0" : "#334155");
+      document.documentElement.style.setProperty("--border", dark ? "rgba(255,255,255,.10)" : "rgba(15,23,42,.12)");
+      document.documentElement.style.setProperty("--panel", dark ? "rgba(255,255,255,.03)" : "rgba(15,23,42,.04)");
+      document.documentElement.style.setProperty("--panel2", dark ? "rgba(0,0,0,.18)" : "rgba(15,23,42,.06)");
+    });
 
-  const lr = getLineRangeAt(pos);
-  const line = v.slice(lr.s, lr.e);
-
-  // get previous/next line range
-  if(dir === -1){
-    if(lr.s === 0) return;
-    const prevEnd = lr.s - 1; // points to '\n'
-    const prev = getLineRangeAt(prevEnd - 1);
-    const prevLine = v.slice(prev.s, prev.e);
-
-    const before = v.slice(0, prev.s);
-    const middle = prevLine + "\n" + line;
-    const after = v.slice(lr.e);
-    codeArea.value = before + line + "\n" + prevLine + after;
-    // set cursor at moved line start
-    codeArea.selectionStart = prev.s;
-    codeArea.selectionEnd = prev.s;
-    commitEditorToState(); scheduleRun();
-    setStatus("تم نقل السطر لأعلى");
-    return;
-  }
-
-  // down
-  // find next line
-  let nextStart = lr.e;
-  if(nextStart >= v.length) return;
-  if(v[nextStart] === "\n") nextStart++;
-  if(nextStart >= v.length) return;
-
-  const next = getLineRangeAt(nextStart);
-  const nextLine = v.slice(next.s, next.e);
-
-  const before = v.slice(0, lr.s);
-  const after = v.slice(next.e);
-  codeArea.value = before + nextLine + "\n" + line + after;
-  codeArea.selectionStart = next.s;
-  codeArea.selectionEnd = next.s;
-  commitEditorToState(); scheduleRun();
-  setStatus("تم نقل السطر لأسفل");
-}
-
-function toolWrap(tag){
-  if(!ensureEditorTab()) return;
-  const { start, end, value } = getSelection();
-  const chunk = (end > start) ? value.slice(start, end) : "";
-  const inner = chunk || "اكتب هنا";
-  const wrapped = `<${tag}>${inner}</${tag}>`;
-  replaceRange(start, end, wrapped);
-  setStatus(`تم لف التحديد بـ <${tag}>`);
-}
-
-function toolLogSelection(){
-  if(!ensureEditorTab()) return;
-  if(activeTab !== "js"){
-    setStatus("ملاحظة: الأفضل تستخدمها في تبويب JS");
-  }
-  const { start, end, value } = getSelection();
-  const chunk = (end > start) ? value.slice(start, end).trim() : "";
-  const text = chunk ? `console.log(${chunk});` : `console.log("log");`;
-  insertAtSelection(text);
-  setStatus("تم إدخال console.log");
-}
-
-function toolMakeFunction(){
-  if(!ensureEditorTab()) return;
-  const name = prompt("اكتب اسم الدالة (function name):", "myFunction");
-  if(!name) return;
-  const safe = name.replace(/[^\w$]/g, "");
-  const fn = `function ${safe}(){
-  // TODO
-}\n`;
-  insertAtSelection(fn);
-  setStatus("تم إدخال function");
-}
-
-const TOOL_HANDLERS = {
-  "toggle-comment": toolToggleComment,
-  "duplicate": toolDuplicate,
-  "delete-line": toolDeleteLine,
-  "move-up": ()=> toolMoveLine(-1),
-  "move-down": ()=> toolMoveLine(1),
-  "wrap-div": ()=> toolWrap("div"),
-  "wrap-section": ()=> toolWrap("section"),
-  "wrap-span": ()=> toolWrap("span"),
-  "wrap-a": ()=> toolWrap("a"),
-  "wrap-button": ()=> toolWrap("button"),
-  "log-selection": toolLogSelection,
-  "make-fn": toolMakeFunction
-};
-
-document.querySelectorAll("[data-tool]").forEach(el=>{
-  el.addEventListener("click", ()=>{
-    const key = el.getAttribute("data-tool");
-    const fn = TOOL_HANDLERS[key];
-    if(fn) fn();
-  });
-});
-
-/* =========================
-   UI events (buttons)
-========================= */
-document.getElementById("btnRun").addEventListener("click", run);
-
-document.getElementById("btnReset").addEventListener("click", ()=>{
-  if(!confirm("أكيد تبي مسح كل شيء؟")) return;
-  localStorage.removeItem(STORAGE_KEY);
-  state = { html:"", css:"", js:"", assets:[] };
-  setActiveTab("html");
-  run();
-  setStatus("تم مسح الكل");
-});
-
-document.getElementById("btnImportCode").addEventListener("click", ()=>{
-  fileInputCode.value = "";
-  fileInputCode.click();
-});
-fileInputCode.addEventListener("change", async (e)=>{
-  const file = e.target.files?.[0];
-  if(!file) return;
-  await importCodeFile(file);
-});
-
-document.getElementById("btnAddAsset").addEventListener("click", ()=>{
-  fileInputAsset.value = "";
-  fileInputAsset.click();
-});
-fileInputAsset.addEventListener("change", async (e)=>{
-  const files = e.target.files;
-  if(!files || files.length === 0) return;
-  await addAssetFiles(files);
-});
-
-document.getElementById("btnExportProject").addEventListener("click", exportProject);
-
-document.getElementById("btnImportProject").addEventListener("click", ()=>{
-  fileInputProject.value = "";
-  fileInputProject.click();
-});
-fileInputProject.addEventListener("change", async (e)=>{
-  const file = e.target.files?.[0];
-  if(!file) return;
-  await importProjectFile(file);
-});
-
-tabs.forEach(btn=>{
-  btn.addEventListener("click", ()=> setActiveTab(btn.dataset.tab));
-});
-
-codeArea.addEventListener("input", ()=>{
-  commitEditorToState();
-  scheduleRun();
-});
-codeArea.addEventListener("blur", ()=> commitEditorToState());
-
-/* =========================
-   Keyboard Shortcuts
-========================= */
-window.addEventListener("keydown", (e)=>{
-  const key = (e.key || "").toLowerCase();
-
-  // F1 help
-  if(e.key === "F1"){
-    e.preventDefault();
-    openHelp();
-    return;
-  }
-
-  // Esc close help
-  if(e.key === "Escape" && helpBackdrop.classList.contains("open")){
-    e.preventDefault();
-    closeHelp();
-    return;
-  }
-
-  // Editor tool shortcuts (only if editor is active tab)
-  const inEditor = (activeTab !== "files") && (document.activeElement === codeArea);
-
-  // Ctrl + /
-  if(inEditor && e.ctrlKey && !e.altKey && !e.shiftKey && e.key === "/"){
-    e.preventDefault();
-    toolToggleComment();
-    return;
-  }
-
-  // Ctrl + D
-  if(inEditor && e.ctrlKey && !e.altKey && !e.shiftKey && key === "d"){
-    e.preventDefault();
-    toolDuplicate();
-    return;
-  }
-
-  // Ctrl + L (delete line)
-  if(inEditor && e.ctrlKey && !e.altKey && !e.shiftKey && key === "l"){
-    e.preventDefault();
-    toolDeleteLine();
-    return;
-  }
-
-  // Alt + Up/Down (move line)
-  if(inEditor && e.altKey && !e.ctrlKey && (e.key === "ArrowUp" || e.key === "ArrowDown")){
-    e.preventDefault();
-    toolMoveLine(e.key === "ArrowUp" ? -1 : 1);
-    return;
-  }
-
-  // Ctrl + Shift + L (log selection)
-  if(inEditor && e.ctrlKey && e.shiftKey && !e.altKey && key === "l"){
-    e.preventDefault();
-    toolLogSelection();
-    return;
-  }
-
-  // Ctrl shortcuts (global)
-  if(e.ctrlKey && !e.altKey){
-    // Ctrl+Enter run
-    if(e.key === "Enter"){
-      e.preventDefault();
-      run();
-      return;
-    }
-    // Ctrl+S export project
-    if(key === "s"){
-      e.preventDefault();
-      exportProject();
-      return;
-    }
-    // Ctrl+O import code file
-    if(key === "o" && !e.shiftKey){
-      e.preventDefault();
-      fileInputCode.value = "";
-      fileInputCode.click();
-      setStatus("اختر ملفًا للاستيراد");
-      return;
-    }
-    // Ctrl+Shift+O add assets
-    if(key === "o" && e.shiftKey){
-      e.preventDefault();
-      fileInputAsset.value = "";
-      fileInputAsset.click();
-      setStatus("اختر ملفات للمشروع");
-      return;
-    }
-  }
-});
-
-/* =========================
-   Init
-========================= */
-load();
-setActiveTab("html");
-run();
-</script>
+    // Search (demo)
+    $("#searchBtn").addEventListener("click", ()=>{
+      const q = $("#searchInput").value.trim();
+      if(!q) return;
+      alert("بحث تجريبي عن: " + q);
+    });
+  </script>
 </body>
 </html>
-
